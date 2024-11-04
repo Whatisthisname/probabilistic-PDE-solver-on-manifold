@@ -9,7 +9,11 @@ CORS(app)
 @app.route("/json-files", methods=["GET"])
 def list_json_files():
     try:
-        files = [f for f in os.listdir(os.path.join(".", "computed_meshes")) if f.endswith(".json")]
+        files = [
+            f
+            for f in os.listdir(os.path.join(".", "computed_meshes"))
+            if f.endswith(".json")
+        ]
         files.sort()
         return jsonify(files)
     except Exception as e:
