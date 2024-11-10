@@ -365,6 +365,9 @@ class Mesh:
         Loads a mesh from an .obj file.
         """
 
+        import trimesh
+        import numpy as np
+
         # Load your mesh
         mesh = trimesh.load(filename)
 
@@ -379,14 +382,25 @@ class Mesh:
             rounded_vertices, axis=0, return_inverse=True
         )
 
-        # Reassign vertices and faces
-        mesh.vertices = unique_vertices
-        mesh.faces = inverse_indices[mesh.faces]
+        # Check if any vertices were removed
+        if len(unique_vertices) != len(mesh.vertices):
+            # Reassign vertices and faces only if duplicates were found
+            mesh.vertices = unique_vertices
+            mesh.faces = inverse_indices[mesh.faces]
 
-        # Update faces by removing duplicates
-        mesh.update_faces(mesh.unique_faces())
+            # Update faces by removing duplicates
+            mesh.update_faces(mesh.unique_faces())
 
-        # Remove unreferenced vertices
-        mesh.remove_unreferenced_vertices()
+            # Remove unreferenced vertices
+            mesh.remove_unreferenced_vertices()
 
-        return cls(vertices=np.array(mesh.vertices), faces=np.array(mesh.faces))
+        # Prepare vertices array with 3 coordinates
+        vertices = np.array(mesh.vertices)
+        if (
+            vertices.shape[1] == 2
+        ):  # if it's a 2D mesh, add an extra coordinate between x and z
+            vertices = np.column_stack(
+                (vertices[:, 0], np.zeros(vertices.shape[0]), vertices[:, 1])
+            )
+
+        return cls(vertices=vertices, faces=np.array(mesh.faces))
