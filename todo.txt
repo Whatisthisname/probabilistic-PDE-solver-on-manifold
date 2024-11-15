@@ -17,4 +17,5 @@ Undersøg noise scale og hvordan ekstra derivatives ændrer mit output. -- fik o
 
 Lav error plots og vis at den konvergerer bedre med OU prior
 
-Gør hvilken PDE der løses til en variabel
+Gør hvilken PDE der løses til en variabel -- gjort, jeg stødte på instability ting med wave, men det må jeg høre Nico om.
+

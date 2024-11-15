@@ -57,23 +57,23 @@ for j, delta_time in enumerate(stepsizes):
 
     p_means, _p_covs = hk.PIVP_heat_solve_dense(
         laplace_matrix=-mesh.laplace_matrix,
-        initial_value=initial_value,
+        initial_mean=initial_value,
         derivatives=derivatives,
         timesteps=sum(obs),
         delta_time=probnum_dt,
         observation_indicator=obs,
-        ornstein_uhlenbeck_prior=False,
+        use_heat_prior=False,
         noise_scale=1,
     )
 
     ou_p_means, _ou_p_covs = hk.PIVP_heat_solve_dense(
         laplace_matrix=-mesh.laplace_matrix,
-        initial_value=initial_value,
+        initial_mean=initial_value,
         derivatives=derivatives,
         timesteps=sum(obs),
         delta_time=probnum_dt,
         observation_indicator=obs,
-        ornstein_uhlenbeck_prior=True,
+        use_heat_prior=True,
         noise_scale=1,
     )
 

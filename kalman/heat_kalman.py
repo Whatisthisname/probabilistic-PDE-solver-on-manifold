@@ -2,14 +2,14 @@ from typing import Literal
 import matplotlib.pyplot as plt
 import jax
 import jax.numpy as jnp
-import kalman.jax_kalman as jaxk
-from kalman import IWPprior
+import jax_kalman as jaxk
+import IWPprior
 
 
 def PIVP_heat_solve(
     *,
     laplace_matrix: jnp.array,
-    initial_value: jnp.array,
+    initial_mean: jnp.array,
     derivatives: int = 2,
     timesteps: int = 100,
     delta_time: float = 0.1,
@@ -33,6 +33,8 @@ def PIVP_heat_solve(
         int delta_time
             The amount with which to advance time after each step.
     """
+
+    print("Starting PIVP_heat_solve")
 
     grid = len(laplace_matrix)
     print(grid)
@@ -75,7 +77,7 @@ def PIVP_heat_solve(
     observations = jnp.zeros((timesteps, grid))
 
     filter_means, filter_covs, pred_means, pred_covs = jaxk.batch_filter(
-        A, Q, heat_pde_error_matrix, R, initial_value, initial_cov, observations
+        A, Q, heat_pde_error_matrix, R, initial_mean, initial_cov, observations
     )
     print("Filtered on PDE observations")
     smooth_means, smooth_covs = jaxk.batch_smooth(
@@ -89,12 +91,105 @@ def PIVP_heat_solve(
 def PIVP_heat_solve_dense(
     *,
     laplace_matrix: jnp.array,
+    initial_mean: jnp.array,
+    derivatives: int,
+    delta_time: float = 0.1,
+    observation_indicator: jnp.array,
+    noise_scale: float = 1,
+    use_heat_prior: bool = False,
+    PDE: Literal["heat", "wave"] = "heat",
+):
+    r"""
+    Args:
+        jax.numpy.array laplace_matrix:
+            The domain-specific laplace matrix
+
+        jax.numpy.array initial_value:
+            The initial value of the solution, full state space, so also including derivatives.
+
+        int derivatives
+            Integer k > 0 specifying the smoothness of our time input, like the 'k' in C^k.
+            Lower is faster. We need the time derivative to be at least C^1 to define the derivative.
+
+        int delta_time
+            The amount with which to advance time after each step.
+    """
+
+    print("Starting PIVP_heat_solve_dense")
+
+    # assert (derivatives > 0) and (
+    #     timesteps > 0
+    # ), "Derivatives and timesteps must be > 0"
+
+    grid = len(laplace_matrix)
+    print(grid)
+
+    q = derivatives
+    """Amount of derivatives we model"""
+
+    LOO = jnp.zeros((grid, q * grid + grid))
+    LOO = LOO.at[:grid, :grid].set(-laplace_matrix)
+
+    OIO = jnp.zeros((grid, q * grid + grid)).at[:, grid : 2 * grid].set(jnp.eye(grid))
+
+    OOI = (
+        jnp.zeros((grid, q * grid + grid)).at[:, 2 * grid : 3 * grid].set(jnp.eye(grid))
+    )
+
+    SDE_coef, SDE_noise = IWPprior.get_IWP_Prior_SDE_coefficients(
+        size=grid, derivatives=q
+    )
+    SDE_noise *= noise_scale
+
+    # insert -L into lower right corner
+    if use_heat_prior:
+        SDE_coef = SDE_coef.at[-grid:, -grid:].set(-laplace_matrix)
+
+    A, Q = jaxk.fast_get_discrete_system_coeffs(SDE_coef, SDE_noise, delta_time)
+
+    if PDE == "heat":
+        pde_error_matrix = LOO - OIO
+    elif PDE == "wave":
+        pde_error_matrix = LOO - OOI
+
+    observation_noise = jnp.zeros((grid, grid))
+
+    initial_cov = jnp.diag(jnp.array([1e-5] * grid + [1] * (q * grid)))
+    #   [0, 0, 0]
+    # = [0, I, 0]
+    #   [0, 0, I]
+
+    filter_means, filter_covs, pred_means, pred_covs = (
+        jaxk.batch_filter_optional_zero_observation(
+            A,
+            Q,
+            pde_error_matrix,
+            observation_noise,
+            initial_mean,
+            initial_cov,
+            observation_indicator,
+        )
+    )
+
+    print("Filtered on PDE observations")
+    smooth_means, smooth_covs = jaxk.batch_smooth(
+        A, filter_means, filter_covs, pred_means, pred_covs
+    )
+    print("Smoothed PDE observations, returning")
+
+    return smooth_means, smooth_covs
+
+
+def PIVP_solve_dense_non_linear(
+    *,
+    laplace_matrix: jnp.array,
     initial_value: jnp.array,
     derivatives: int,
     timesteps: int,
     delta_time: float = 0.1,
     observation_indicator: jnp.array,
     noise_scale: float = 1,
+    nonlinear_observation_function,
     ornstein_uhlenbeck_prior: bool = False,
     PDE: Literal["heat", "wave"] = "heat",
 ):
@@ -117,6 +212,8 @@ def PIVP_heat_solve_dense(
             The amount with which to advance time after each step.
     """
 
+    print("Starting PIVP_heat_solve_dense_non_linear")
+
     assert (derivatives > 0) and (
         timesteps > 0
     ), "Derivatives and timesteps must be > 0"
@@ -126,17 +223,6 @@ def PIVP_heat_solve_dense(
 
     q = derivatives
     """Amount of derivatives we model"""
-
-    curvature_matrix = jnp.zeros((grid, q * grid + grid))
-    curvature_matrix = curvature_matrix.at[:grid, :grid].set(-laplace_matrix)
-
-    time_1derivative_matrix = (
-        jnp.zeros((grid, q * grid + grid)).at[:, grid : 2 * grid].set(jnp.eye(grid))
-    )
-
-    time_2derivative_matrix = (
-        jnp.zeros((grid, q * grid + grid)).at[:, 2 * grid : 3 * grid].set(jnp.eye(grid))
-    )
 
     SDE_coef, SDE_noise = IWPprior.get_IWP_Prior_SDE_coefficients(
         size=grid, derivatives=q
@@ -153,11 +239,6 @@ def PIVP_heat_solve_dense(
 
     print("Discretized IWP prior")
 
-    if PDE == "heat":
-        pde_error_matrix = curvature_matrix - time_1derivative_matrix
-    elif PDE == "wave":
-        pde_error_matrix = curvature_matrix - time_2derivative_matrix
-
     R = jnp.zeros((grid, grid))
 
     initial_cov = jnp.zeros((grid * (1 + q), grid * (1 + q)))
@@ -165,13 +246,13 @@ def PIVP_heat_solve_dense(
         jnp.eye(derivatives * grid) * 1
     )  # TODO choose
 
-    observations = jnp.zeros((len(observation_indicator), grid))
+    observations = jnp.zeros((len(observation_indicator) * (q + 1), grid))
 
     filter_means, filter_covs, pred_means, pred_covs = (
-        jaxk.batch_filter_optional_observation(
+        jaxk.batch_filter_optional_observation_nonlinear_observation(
             A,
             Q,
-            pde_error_matrix,
+            nonlinear_observation_function,
             R,
             initial_value,
             initial_cov,
@@ -213,7 +294,7 @@ if __name__ == "__main__":
 
     means, covs = PIVP_heat_solve(
         laplace_matrix=laplace,
-        initial_value=initial_value,
+        initial_mean=initial_value,
         derivatives=derivatives,
         timesteps=100,
         delta_time=0.002,

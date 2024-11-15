@@ -1,4 +1,3 @@
-import numpy as np
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -37,6 +36,9 @@ def fast_get_discrete_system_coeffs(SDE_coef, SDE_noise, time_step):
     solution = expd @ jnp.block([[jnp.zeros((state, state))], [jnp.eye(state)]])
 
     Q = solution[:state, :state] @ A.T
+
+    # jax.debug.print("cond(Q) = {Q}", Q=jnp.linalg.cond(Q))
+
     return A, Q
 
 
@@ -50,6 +52,30 @@ def predict(prev_mean, prev_cov, A, Q):
     # predictive covariance:
     pred_cov = A @ prev_cov @ A.T + Q
     return (pred_mean, pred_cov), (pred_mean, pred_cov)
+
+
+def zero_obs_filter(prev_mean, prev_cov, A, Q, H, R):
+    (pred_mean, pred_cov), _ = predict(prev_mean, prev_cov, A, Q)
+    resid = (
+        -H @ pred_mean
+    )  # there is a missing "+ observation" here, but it's zero anyway
+    # observation covariance / innovation covariance:
+
+    innov_cov = H @ pred_cov @ H.T + R
+
+    # jax.debug.print(
+    #     "cond(innov_cov) = {innov_cov}", innov_cov=jnp.linalg.cond(innov_cov)
+    # )
+
+    # gain = pred_cov @ H.T @ jnp.linalg.inv(innov_cov)
+    gain = (jnp.linalg.solve(innov_cov.T, (pred_cov @ H.T).T)).T
+
+    # jax.debug.print("cond(gain) = {gain_cond}", gain_cond=jnp.linalg.cond(gain))
+
+    filter_mean = pred_mean + gain @ resid
+    filter_cov = (jnp.eye(H.shape[1]) - gain @ H) @ pred_cov
+
+    return (filter_mean, filter_cov), (pred_mean, pred_cov)
 
 
 def filter(prev_mean, prev_cov, A, Q, H, R, new_observation):
@@ -66,30 +92,20 @@ def filter(prev_mean, prev_cov, A, Q, H, R, new_observation):
     return (filter_mean, filter_cov), (pred_mean, pred_cov)
 
 
-def nonlinear_predict(prev_mean, prev_cov, transition_func, Q):
-    # predictive mean:
-    pred_mean = transition_func(prev_mean)
-    # predictive covariance:
-    step_jac = jax.jacobian(transition_func)(prev_mean)
-    pred_cov = step_jac @ prev_cov @ step_jac.T + Q
-    return (pred_mean, pred_cov), (pred_mean, pred_cov)
-
-
-def nonlinear_filter(
-    prev_mean, prev_cov, transition_func, Q, observation_func, R, new_observation
-):
-    (pred_mean, pred_cov), _ = nonlinear_predict(
-        prev_mean, prev_cov, transition_func, Q
-    )
+def nonlinear_filter(prev_mean, prev_cov, A, Q, observation_func, R, new_observation):
+    (pred_mean, pred_cov), _ = predict(prev_mean, prev_cov, A, Q)
     resid = new_observation - observation_func(pred_mean)
-    # observation covariance / innovation covariance:
+
     obs_jac = jax.jacobian(observation_func)(pred_mean)
+
+    # observation covariance / innovation covariance:
     innov_cov = obs_jac @ pred_cov @ obs_jac.T + R
+
     # wikipedia calls this "near optimal" gain
     gain = pred_cov @ obs_jac.T @ jnp.linalg.inv(innov_cov)
 
     filter_mean = pred_mean + gain @ resid
-    filter_cov = (jnp.eye(R.shape[0]) - gain @ obs_jac) @ pred_cov
+    filter_cov = (jnp.eye(A.shape[0]) - gain @ obs_jac) @ pred_cov
 
     return (filter_mean, filter_cov), (pred_mean, pred_cov)
 
@@ -105,7 +121,18 @@ def batch_smooth(A, filter_means, filter_covs, pred_means, pred_covs):
         next_smooth_mean,
         next_smooth_cov,
     ):
-        G = filter_cov @ A.T @ jnp.linalg.inv(next_pred_cov)
+        jax.debug.print(
+            "cond(next_pred_cov) = {npc}", npc=jnp.linalg.cond(next_pred_cov)
+        )
+        # G = (filter_cov @ A.T) @ jnp.linalg.inv(next_pred_cov)
+
+        jitter = jnp.eye(next_pred_cov.shape[0]) * 1e-5 * 0
+
+        G = jnp.linalg.solve(
+            (filter_cov @ A.T).T, next_pred_cov.T + jitter
+        ).T  # can compute this full line in "predict"
+
+        jax.debug.print("cond(G) = {G}", G=jnp.linalg.cond(G))
         m = filter_mean + G @ (next_smooth_mean - next_pred_mean)
         P = filter_cov + G @ (next_smooth_cov - next_pred_cov) @ G.T
         return m, P
@@ -206,8 +233,8 @@ def batch_filter(A, Q, H, R, mean, cov, observations):
 
 
 @jax.jit
-def batch_filter_optional_observation(
-    A, Q, H, R, mean, cov, observations, use_observation_indicator
+def batch_filter_optional_zero_observation(
+    A, Q, H, R, mean, cov, use_observation_indicator
 ):
     """Batch filter a sequence of observations
 
@@ -224,8 +251,6 @@ def batch_filter_optional_observation(
             Initial state mean, shape (state_dim,)
         cov : jnp.array
             Initial state covariance, shape (state_dim, state_dim)
-        observations : jnp.array
-            Observations, shape (n_timesteps, obs_dim)
         use_observation_indicator : jnp.array
             Bool-indicator for each timestep whether to use the observation or not, shape (n_timesteps,)
 
@@ -243,17 +268,14 @@ def batch_filter_optional_observation(
             Predicted state covariances, shape (n_timesteps, state_dim, state_dim)
     """
 
-    def body_fun(mean_and_cov_and_idx, use_obs):
-        prev_mean, prev_cov, obs_idx = mean_and_cov_and_idx
-        use_obs = use_obs
+    def body_fun(mean_and_cov, use_obs):
+        prev_mean, prev_cov = mean_and_cov
 
-        new_obs_idx = obs_idx + use_obs
-
-        def interpolation_func(curr_mean, curr_cov, observation):
+        def interpolation_func(curr_mean, curr_cov):
             return predict(curr_mean, curr_cov, A, Q)
 
-        def use_obs_func(curr_mean, curr_cov, observation):
-            return filter(curr_mean, curr_cov, A, Q, H, R, observation)
+        def use_obs_func(curr_mean, curr_cov):
+            return zero_obs_filter(curr_mean, curr_cov, A, Q, H, R)
 
         (new_mean, new_cov), (pred_mean, pred_cov) = jax.lax.cond(
             use_obs,
@@ -261,20 +283,17 @@ def batch_filter_optional_observation(
             interpolation_func,
             prev_mean,
             prev_cov,
-            observations[new_obs_idx],
         )
 
         # returns a tuple of (output, append_to_carry)
-        return (new_mean, new_cov, new_obs_idx), (
+        return (new_mean, new_cov), (
             (new_mean, new_cov),
             (pred_mean, pred_cov),
         )
 
-    initial_obs_idx = -1
-
     _, ((filter_means, filter_covs), (pred_means, pred_covs)) = jax.lax.scan(
         f=body_fun,
-        init=(mean, cov, initial_obs_idx),
+        init=(mean, cov),
         xs=(use_observation_indicator),
     )
 
@@ -289,9 +308,8 @@ def batch_filter_optional_observation(
     return filter_means, filter_covs, pred_means, pred_covs
 
 
-@jax.jit
 def batch_filter_optional_observation_nonlinear_observation(
-    non_linear_transition_func,
+    A,
     Q,
     non_linear_observation_func,
     R,
@@ -303,8 +321,8 @@ def batch_filter_optional_observation_nonlinear_observation(
     """Batch filter a sequence of observations
 
     Args:
-        non_linear_transition_func : function
-            Non-linear state evolution function, must be jax.jit'able
+        A : jnp.array
+            State evolution matrix, shape (state_dim, state_dim)
         Q : jnp.array
             State noise covariance, shape (state_dim, state_dim)
         non_linear_observation_func : function
@@ -334,6 +352,7 @@ def batch_filter_optional_observation_nonlinear_observation(
             Predicted state covariances, shape (n_timesteps, state_dim, state_dim)
     """
 
+    @jax.jit
     def body_fun(mean_and_cov_and_idx, use_obs):
         prev_mean, prev_cov, obs_idx = mean_and_cov_and_idx
         use_obs = use_obs
@@ -341,13 +360,13 @@ def batch_filter_optional_observation_nonlinear_observation(
         new_obs_idx = obs_idx + use_obs
 
         def interpolation_func(curr_mean, curr_cov, observation):
-            return nonlinear_predict(curr_mean, curr_cov, non_linear_transition_func, Q)
+            return predict(curr_mean, curr_cov, A, Q)
 
         def use_obs_func(curr_mean, curr_cov, observation):
             return nonlinear_filter(
                 curr_mean,
                 curr_cov,
-                non_linear_transition_func,
+                A,
                 Q,
                 non_linear_observation_func,
                 R,

@@ -22,14 +22,14 @@ distance_to_center = np.linalg.norm(mesh.vertices[:, [0, 2]] * [1.5, 3], axis=1)
 rbf = np.exp(-3 * (distance_to_center**2)) * 1
 initial_value[:n] = above_mask * rbf
 
-
+timesteps = 250
 delta_time = 0.05
 
 p_means, p_covs = hk.PIVP_heat_solve(
     laplace_matrix=-mesh.laplace_matrix,
-    initial_value=initial_value,
+    initial_mean=initial_value,
     derivatives=derivatives,
-    timesteps=250,
+    timesteps=timesteps,
     delta_time=delta_time,
     noise_scale=1,
 )
@@ -42,12 +42,13 @@ n_means = hs.numeric_solve_heat_equation(
     boundary_nodes=boundary_nodes,
     boundary_values=boundary_values,
     f=np.zeros(n),
-    timesteps=250,
+    timesteps=timesteps,
 )
 
 
+newname = f"{name}, dt={delta_time}, t={timesteps}, heat.json"
 mesh.dump_to_JSON(
-    f"{name}_PIVP.json",
+    newname,
     {
         "Initial Value": initial_value[:n],
         "Probabilistic Heat Equation": {
@@ -73,3 +74,4 @@ mesh.dump_to_JSON(
         "areas": np.diagonal(mesh.star0.toarray()),
     },
 )
+print("saved as", newname)

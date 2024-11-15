@@ -4,7 +4,8 @@ import kalman.heat_kalman as hk
 from solver import heat_solver as hs
 import scipy.sparse as sps
 import matplotlib.pyplot as plt
-
+import jax.numpy as jnp
+import jax
 
 mesh_name = "sphere_small"
 mesh = Mesh.from_obj(f"meshes/{mesh_name}.obj")
@@ -31,8 +32,8 @@ timesteps = 175
 timesteps = 185
 timesteps = 190
 timesteps = 191
-# timesteps = 192
-# timesteps = 193
+# timesteps = 192 # breaks, unstable numerically
+# timesteps = 193 # also breaks
 
 
 obs = np.zeros(timesteps).astype(bool)
@@ -43,8 +44,32 @@ delta_time = 0.05
 pde_type = "wave"
 OU = False
 
+# pde: u_tt = -u_xx * u
 
-p_means, p_covs = hk.PIVP_heat_solve_dense(
+
+O = jnp.zeros((n, n))
+I = jnp.eye(n)
+curvature_matrix = jnp.block([-mesh.laplace_matrix, O, O])
+value = jnp.block([I, O, O])
+first_time_derivative = jnp.block([O, I, O])
+second_time_derivative = jnp.block([O, O, I])
+
+
+# H @ u
+# H(u)
+
+
+# def non_linear_observation_function(state):
+#    return curvature_matrix @ state - first_time_derivative @ state
+
+# u_t = -u∆u
+
+
+def non_linear_observation_function(state):
+    return (E_0 @ state) * (curvature_matrix @ state) - first_time_derivative @ state
+
+
+p_means, p_covs = hk.PIVP_solve_dense_non_linear(
     laplace_matrix=-mesh.laplace_matrix,
     initial_value=initial_value,
     derivatives=derivatives,
@@ -54,6 +79,7 @@ p_means, p_covs = hk.PIVP_heat_solve_dense(
     ornstein_uhlenbeck_prior=OU,
     noise_scale=1,
     PDE=pde_type,
+    nonlinear_observation_function=non_linear_observation_function,
 )
 
 
