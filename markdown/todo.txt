@@ -1,0 +1,21 @@
+Hej Theo min ven. I dag skal vi gerne se på følgende muligheder for forbedring.
+
+Hvor kommer NaN fra i teapot heat equation?  --- Kan ikke reproducere lige nu.
+
+Når det er løst, så prøv at sammenligne PIVP med numerical backward euler. 
+Både visuelt numerisk. Kan trække dem fra hinanden og plotte udviklingen. --- det er gjort. Der var lige et problem, de starter ikke samtidig.
+
+Undersøg om det er svært at få "initial state" med ind i kalman filter output. Hvad kræver det af ændringer i filter? --- jeg tror jeg har gjort det o-k. 
+
+Jeg synes nu ikke rigtigt at de stemmer særlig godt overens. --- ok, hvis jeg tager kortere timesteps, så er det godt
+
+Prøv at lave "dense output". Altså kør kalman filter fremad, men kun hav observation hver 5'te skridt.  
+Så filter-mean og filter-cov er bare de predicted versioner når der ikke er ekstra information.
+Når vi så smoother så ved den ikke noget om det, så det er intet problem. ---- sådan!
+
+Undersøg noise scale og hvordan ekstra derivatives ændrer mit output. -- fik opdaget at min initial state derivatives skal være unknown! vigtigt.
+
+Lav error plots og vis at den konvergerer bedre med OU prior
+
+Gør hvilken PDE der løses til en variabel -- gjort, jeg stødte på instability ting med wave, men det må jeg høre Nico om.
+
