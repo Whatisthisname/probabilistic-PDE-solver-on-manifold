@@ -25,6 +25,8 @@ class Mesh:
         Initialize the Mesh with given vertices and faces.
         If vertices and faces are not provided, it will generate a default mesh.
         """
+        print("creating mesh")
+
         if vertices is None or faces is None:
             # Generate default mesh (e.g., unit square grid)
             self.vertices, self.faces = self.generate_default_mesh()
@@ -35,9 +37,13 @@ class Mesh:
         self.boundary_mask = self.find_boundary_vertices()
         """Holds 1 for boundary vertices and 0 for interior vertices"""
         self.edges = self.compute_edges()
+        """All pairs (a,b) of edges, ordered so a < b"""
         self.edge_map = self.compute_edge_map()
+        """Mapping from each vertex to its connected vertices"""
         self.tri_map = self.compute_tri_map()
+        """Mapping from each vertex to the triangles it belongs to, sort of the opposite of self.faces"""
         self.opposing_vertices = self.compute_opposing_vertices()
+        """Map from edge to the (at most 2) vertices orthogonal to it"""
         self.d0 = self.compute_d0()
         self.d1 = self.compute_d1()
 
@@ -133,10 +139,10 @@ class Mesh:
         """
         Computes a mapping from each vertex to its connected vertices.
         """
-        edge_map = [{} for _ in range(len(self.vertices))]
+        edge_map = [set() for _ in range(len(self.vertices))]
         for a, b in self.edges:
-            edge_map[a][b] = True
-            edge_map[b][a] = True
+            edge_map[a].add(b)
+            edge_map[b].add(a)
         return edge_map
 
     def compute_tri_map(self):
@@ -257,7 +263,9 @@ class Mesh:
                 cb = self.vertices[b] - c
                 cb /= np.linalg.norm(cb)
                 angle = np.arccos(np.dot(ca, cb))
-                weights.append(np.cos(angle) / np.sin(angle))
+                cot = np.cos(angle) / np.sin(angle)
+                # print(f"cotangent of edge {a} {b} with vertex {oppo} is {cot}")
+                weights.append(cot)
 
             A[i, i] = 0.5 * sum(weights)
         return A
@@ -360,7 +368,7 @@ class Mesh:
             json.dump(mesh_data, f)
 
     @classmethod
-    def from_obj(cls, filename):
+    def from_obj(cls, filename, lazy=False):
         """
         Loads a mesh from an .obj file.
         """
@@ -403,4 +411,4 @@ class Mesh:
                 (vertices[:, 0], np.zeros(vertices.shape[0]), vertices[:, 1])
             )
 
-        return cls(vertices=vertices, faces=np.array(mesh.faces))
+        return cls(vertices=vertices, faces=np.array(mesh.faces), lazy=lazy)
