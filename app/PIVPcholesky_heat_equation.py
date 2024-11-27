@@ -1,11 +1,11 @@
 import numpy as np
-from discrete_exterior_calculus import DECMesh
+from app.discrete_exterior_calculus import DEC
 from probabilistic_numerics import heat_kalman
 from traditional_numerics import heat_solver as hs
 import scipy.sparse as sps
 
 name = "sphere_small"
-mesh = DECMesh.Mesh.from_obj(f"meshes/{name}.obj")
+mesh = DEC.Mesh.from_obj(f"meshes/{name}.obj")
 
 boundary_nodes = mesh.boundary_mask.copy()
 

@@ -1,5 +1,5 @@
 import numpy as np
-from discrete_exterior_calculus.DECMesh import Mesh
+from app.discrete_exterior_calculus.DEC import Mesh
 import kalman.heat_kalman as hk
 from solver import heat_solver as hs
 import scipy.sparse as sps

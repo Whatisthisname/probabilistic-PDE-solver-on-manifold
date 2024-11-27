@@ -163,7 +163,7 @@ def PIVP_heat_solve_cholesky(
 
     observations = jnp.zeros((timesteps, grid))
 
-    filtered, reverse_parameters = cholk.jax_batch_filter(
+    filtered, reverse_parameters = cholk.jax_batch_extended_filter(
         prior_mean=initial_mean,
         prior_cholvariance=initial_cov,
         A_cond_obs=heat_pde_error_matrix,
@@ -185,6 +185,96 @@ def PIVP_heat_solve_cholesky(
     print("Smoothed PDE observations, returning")
 
     return smooth_means, smooth_chol_covs
+
+
+def solve_nonlinear_IVP(
+    *,
+    laplace_matrix: jnp.array,
+    initial_mean: jnp.array,
+    derivatives: int = 2,
+    timesteps: int = 100,
+    delta_time: float = 0.1,
+    heat_prior: bool = False,
+    length_scale: float = 1,
+    observation_function,
+    update_indicator,
+):
+    r"""
+    Args:
+        jax.numpy.array laplace_matrix:
+            The domain-specific laplace matrix
+
+        jax.numpy.array initial_value:
+            The initial value of the solution, full state space, so also including derivatives.
+
+        int derivatives
+            Integer specifying the smoothness of our solution, like the 'k' in C^k. Lower is faster.
+
+        int timesteps
+            The amount of steps to compute. Lower is faster.
+
+        int delta_time
+            The amount with which to advance time after each step.
+    """
+
+    print("Starting PIVP_heat_solve")
+
+    grid = len(laplace_matrix)
+    print(grid)
+
+    q = derivatives
+    """Amount of derivatives we model"""
+
+    curvature_matrix = jnp.zeros((grid, q * grid + grid))
+    curvature_matrix = curvature_matrix.at[:grid, :grid].set(-laplace_matrix)
+
+    SDE_coef, SDE_noise = IWPprior.get_IWP_Prior_SDE_coefficients(
+        size=grid, derivatives=q
+    )
+
+    if heat_prior:
+        SDE_coef = SDE_coef.at[-grid:, -grid:].set(-laplace_matrix)
+
+    A, Q = IWPprior.fast_get_discrete_system_coeffs(SDE_coef, SDE_noise, delta_time)
+
+    Q *= length_scale**2
+
+    print("Discretized IWP prior")
+
+    R = jnp.eye((grid)) * 0.00001 * length_scale**2
+
+    # initial_cov = jnp.zeros((grid * (1 + q), grid * (1 + q)))
+    initial_cov = jnp.sqrt(jnp.diag(jnp.array([0.1] * grid + [0.1] * (q * grid)))) * 0
+
+    filtered, reverse_parameters = cholk.jax_batch_extended_filter(
+        prior_mean=initial_mean,
+        prior_cholvariance=initial_cov,
+        observation_function=observation_function,
+        Ch_cond_obs=jnp.zeros((grid, grid)),  # jnp.linalg.cholesky(R) * 0,
+        A_cond_state=A,
+        b_cond_state=jnp.zeros(grid * (1 + q)),
+        Ch_cond_state=jnp.linalg.cholesky(Q),
+        update_indicator=update_indicator,
+        timesteps=timesteps,
+        delta_time=delta_time,
+    )
+
+    print("Filtered on PDE observations")
+    last_filtered = cholk.CholGauss(filtered.mean[-1], filtered.chol_cov[-1])
+    smooth_means, smooth_chol_covs, _samples = cholk.jax_batch_smooth_and_sample(
+        last_filtered,
+        reverse_parameters,
+        n_samples=0,
+    )
+    print("Smoothed PDE observations, done.")
+    stds = jnp.sqrt(
+        jnp.diagonal(
+            jnp.einsum("ijk,ilk->ijl", smooth_chol_covs, smooth_chol_covs),
+            axis1=1,
+            axis2=2,
+        )
+    )
+    return smooth_means, stds
 
 
 def PIVP_heat_solve_dense(

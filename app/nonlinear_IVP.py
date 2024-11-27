@@ -1,14 +1,21 @@
 import numpy as np
-from discrete_exterior_calculus.DECMesh import Mesh
-import kalman.heat_kalman as hk
-from solver import heat_solver as hs
+from app.discrete_exterior_calculus.DEC import Mesh
+from probabilistic_numerics import heat_kalman
 import scipy.sparse as sps
 import matplotlib.pyplot as plt
 import jax.numpy as jnp
 import jax
 
-mesh_name = "sphere_small"
-mesh = Mesh.from_obj(f"meshes/{mesh_name}.obj")
+
+from icosphere import icosphere
+
+# nu:       1   2   3   4    5    6    7    8    9    10
+# vertices: 12, 42, 92, 162, 252, 362, 492, 642, 812, 1002
+vertices, faces = icosphere(nu=3)
+
+mesh_name = f"icosphere_v={len(vertices)}"
+# mesh = Mesh.from_obj(f"meshes/{mesh_name}.obj")
+mesh = mesh = Mesh(vertices, faces)
 
 boundary_nodes = mesh.boundary_mask.copy()
 
@@ -27,75 +34,61 @@ distance_to_center = np.linalg.norm(mesh.vertices[:, [0, 2]] * [1.5, 3], axis=1)
 rbf = np.exp(-3 * (distance_to_center**2)) * 1
 initial_value[:n] = above_mask * rbf
 
-
-timesteps = 175
-timesteps = 185
-timesteps = 190
-timesteps = 191
-# timesteps = 192 # breaks, unstable numerically
-# timesteps = 193 # also breaks
-
-
-obs = np.zeros(timesteps).astype(bool)
-obs[:] = True
-
+timesteps = 200
 
 delta_time = 0.05
-pde_type = "wave"
-OU = False
-
-# pde: u_tt = -u_xx * u
-
+heat_prior = False
 
 O = jnp.zeros((n, n))
 I = jnp.eye(n)
+
 curvature_matrix = jnp.block([-mesh.laplace_matrix, O, O])
 value = jnp.block([I, O, O])
+solution = jnp.block([I, O, O])
 first_time_derivative = jnp.block([O, I, O])
 second_time_derivative = jnp.block([O, O, I])
 
-
-# H @ u
-# H(u)
-
-
-# def non_linear_observation_function(state):
-#    return curvature_matrix @ state - first_time_derivative @ state
-
-# u_t = -u∆u
+# get the eigenvalues and vectors of the laplace matrix
+# and sort them in descending order
+eigenvalues, eigenvectors = jnp.linalg.eigh(mesh.laplace_matrix)
+idx = jnp.argsort(eigenvalues)[::-1]
+eigenvalues = eigenvalues[idx]
+eigenvectors = eigenvectors[:, idx].T.real
 
 
-def non_linear_observation_function(state):
-    return (E_0 @ state) * (curvature_matrix @ state) - first_time_derivative @ state
+initial_value[:n] = eigenvectors[15] * 5
 
 
-p_means, p_covs = hk.PIVP_solve_dense_non_linear(
+def non_linear_observation_function(state, time):
+    return -jnp.tanh((curvature_matrix @ state)) - second_time_derivative @ state
+
+
+import time
+
+start = time.time()
+
+update_indicator = jnp.tile(jnp.array([True] + [True] * 9), timesteps // 10)
+timesteps = len(update_indicator)
+
+p_means, p_stds = heat_kalman.solve_nonlinear_IVP(
     laplace_matrix=-mesh.laplace_matrix,
-    initial_value=initial_value,
+    initial_mean=initial_value,
     derivatives=derivatives,
-    timesteps=sum(obs),
-    delta_time=delta_time,
-    observation_indicator=obs,
-    ornstein_uhlenbeck_prior=OU,
-    noise_scale=1,
-    PDE=pde_type,
-    nonlinear_observation_function=non_linear_observation_function,
-)
-
-
-n_means = hs.numeric_solve_heat_equation(
-    initial_condition=initial_value[:n],
-    L=sps.csr_matrix(mesh.laplace_matrix),
-    delta_time=delta_time,
-    boundary_nodes=boundary_nodes,
-    boundary_values=boundary_values,
-    f=np.zeros(n),
     timesteps=timesteps,
+    delta_time=delta_time,
+    heat_prior=heat_prior,
+    observation_function=non_linear_observation_function,
+    update_indicator=update_indicator,
+    length_scale=0.001,
 )
 
 
+print("Time taken:", jnp.round(time.time() - start, 2))
+
+newname = f"nonlinear_{'heat_prior' if heat_prior else ''}_{mesh_name}.json"
+print("Saving to", newname)
 mesh.dump_to_JSON(
-    f"{pde_type}{'_OU' if OU else ''}_{mesh_name}.json",
+    newname,
     {
         "Initial Value": initial_value[:n],
         "Probabilistic Heat Equation": {
@@ -104,20 +97,12 @@ mesh.dump_to_JSON(
             "end": 1,
         },
         "Probabilistic Standard Dev.": {
-            # "data": np.sqrt(np.diagonal(p_covs[:, :n], axis1=1, axis2=2)),
-            "data": np.sqrt(
-                np.maximum(np.diagonal(p_covs[:, :n], axis1=1, axis2=2), 0)
-            ),
+            "data": (p_stds[:, :n]),
             "start": 0,
             "end": 1,
         },
-        "Numerical Heat Equation": {
-            "data": n_means,
-            "start": 0,
-            "end": 1,
-        },
-        "Absolute Difference": {
-            "data": np.abs(p_means[:, :n] - n_means),
+        "eigenvectors": {
+            "data": eigenvectors,
             "start": 0,
             "end": 1,
         },
@@ -126,7 +111,7 @@ mesh.dump_to_JSON(
 )
 
 
-# take 4 random points on the surface:
+# take some random points on the surface:
 idxs = np.random.choice(np.arange(n), 5)
 
 rows = 1
@@ -137,16 +122,20 @@ for column in range(cols):
     i = idxs[column]
     ax = axs[column]
     ax.plot(p_means[:, i], label="Process Mean", color="blue")
-    ax.scatter(np.where(obs)[0], np.zeros(obs.sum()), label="PDE constraint")
+    ax.scatter(
+        np.where(update_indicator)[0],
+        np.zeros(update_indicator.sum()),
+        label="PDE constraint",
+    )
     ax.fill_between(
         np.arange(len(p_means)),
-        p_means[:, i] - 3 * np.sqrt(np.maximum(p_covs[:, i, i], 0)),
-        p_means[:, i] + 3 * np.sqrt(np.maximum(p_covs[:, i, i], 0)),
+        p_means[:, i] - 3 * p_stds[:, i],
+        p_means[:, i] + 3 * p_stds[:, i],
         alpha=0.5,
         color="blue",
         label=r"$\pm3\sigma$",
     )
-    ax.plot(n_means[:, i], label="numerical solution", linestyle="--", color="black")
+    # ax.plot(n_means[:, i], label="numerical solution", linestyle="--", color="black")
     ax.legend()
     ax.set_ylim(-2, 2)
 plt.show()

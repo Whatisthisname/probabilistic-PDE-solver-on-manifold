@@ -94,7 +94,10 @@ def get_posterior_and_marginal(
     )
     # form X | Y and compute its mean and covariance
     return CholGauss(
-        output.A_rev @ observation + output.b_rev, output.Ch_rev
+        output.A_rev @ observation + output.b_rev,
+        output.Ch_rev,
+        # output.b_rev,
+        # output.Ch_rev,
     ), CholGauss(output.m_out, output.Ch_out)
 
 
@@ -167,9 +170,108 @@ def jax_batch_filter(
 
     gamma = jnp.sqrt(carry.output_noise_scale_acc / (len(observations) + 2))
 
+    scaled_filtered_states = CholGauss(
+        mean=filtered_states.mean, chol_cov=filtered_states.chol_cov * gamma
+    )
+    scaled_reverse_parameters = ReverseParams(
+        A_rev_list=reverse_parameters.A_rev_list,
+        b_rev_list=reverse_parameters.b_rev_list,
+        Ch_rev_list=reverse_parameters.Ch_rev_list * gamma,
+    )
+
+    return (
+        scaled_filtered_states,
+        scaled_reverse_parameters,
+    )
+
+
+@partial(jax.jit, static_argnames=("observation_function", "timesteps"))
+def jax_batch_extended_filter(
+    prior_mean,
+    prior_cholvariance,
+    observation_function,
+    Ch_cond_obs,
+    A_cond_state,
+    b_cond_state,
+    Ch_cond_state,
+    update_indicator,
+    timesteps,
+    delta_time,
+) -> tuple[list[CholGauss], ReverseParams]:
+    Carry = namedtuple("Carry", ["prior", "output_noise_scale_acc"])
+
+    def integrate_observation(prior: CholGauss, time: float):
+        obs_jac = jax.jacobian(observation_function, argnums=0)(prior.mean, time)
+        filtered_state, observation_marginal = get_posterior_and_marginal(
+            prior.mean,
+            prior.chol_cov,
+            obs_jac,
+            observation_function(prior.mean, time) - obs_jac @ prior.mean,
+            Ch_cond_obs,
+            observation=jnp.zeros(obs_jac.shape[0]),
+        )
+
+        # computing the probability of the observation given previous observations
+        # taking the squared mahalanobis norm
+        log_observation_prob = jnp.sum(
+            jsp.linalg.solve_triangular(
+                observation_marginal.chol_cov.T,
+                observation_marginal.mean,
+            )
+            ** 2
+        )
+        return filtered_state, log_observation_prob
+
+    def loop(carry: Carry, input):
+        time, update = input
+
+        filtered_state, gamma = jax.lax.cond(
+            update,
+            integrate_observation,  # <- if true
+            lambda prior, time: (carry.prior, 0.0),  # <- if false
+            *(carry.prior, time),
+        )
+
+        state_state_dist = chol_marginal_and_reverse(
+            filtered_state.mean,
+            filtered_state.chol_cov,
+            A_cond_state,
+            b_cond_state,
+            Ch_cond_state,
+        )
+
+        predicted_next_state = CholGauss(
+            mean=state_state_dist.m_out, chol_cov=state_state_dist.Ch_out
+        )
+
+        carry = Carry(
+            prior=predicted_next_state,
+            output_noise_scale_acc=carry.output_noise_scale_acc + gamma,
+        )
+        state = (
+            filtered_state,
+            ReverseParams(
+                A_rev_list=state_state_dist.A_rev,
+                b_rev_list=state_state_dist.b_rev,
+                Ch_rev_list=state_state_dist.Ch_rev,
+            ),
+        )
+        return carry, state
+
+    (carry, (filtered_states, reverse_parameters)) = jax.lax.scan(
+        loop,
+        init=Carry(
+            prior=CholGauss(prior_mean, prior_cholvariance),
+            output_noise_scale_acc=0.0,
+        ),
+        xs=(jnp.arange(timesteps) * delta_time, update_indicator),
+    )
+
+    gamma = jnp.sqrt(carry.output_noise_scale_acc / (jnp.sum(update_indicator) + 2))
+
     filtered_states: CholGauss
-    filtered_states.chol_cov.at[:].multiply(gamma)
-    reverse_parameters.Ch_rev_list.at[:].multiply(gamma)
+    # filtered_states.chol_cov.at[:].multiply(gamma)
+    # reverse_parameters.Ch_rev_list.at[:].multiply(gamma)
 
     scaled_filtered_states = CholGauss(
         mean=filtered_states.mean, chol_cov=filtered_states.chol_cov * gamma

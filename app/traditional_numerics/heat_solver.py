@@ -21,8 +21,8 @@ def solve_poisson_equation(L, source, boundary_nodes, boundary_values):
     source = source.copy()
     source[boundary_nodes] = boundary_values[boundary_nodes]
     L_modified = matrix_to_identity_at_boundary(L, boundary_nodes)
-    print("rank of L:", np.linalg.matrix_rank(L_modified.toarray()))
-    print("shape of L:", L_modified.shape)
+    # print("rank of L:", np.linalg.matrix_rank(L_modified.toarray()))
+    # print("shape of L:", L_modified.shape)
     # L and f have been modified so the solution will ensure the boundary conditions are satisfied
     u = spla.spsolve(L_modified, source)
 

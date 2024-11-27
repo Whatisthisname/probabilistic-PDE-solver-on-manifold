@@ -1,7 +1,7 @@
 import jax
 import jax.numpy as jnp
 import numpy as np
-from discrete_exterior_calculus.DECMesh import Mesh
+from app.discrete_exterior_calculus.DEC import Mesh
 from probabilistic_numerics import heat_kalman as hk
 from traditional_numerics import heat_solver as hs
 import scipy.sparse as sps
