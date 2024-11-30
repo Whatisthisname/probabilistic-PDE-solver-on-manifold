@@ -253,7 +253,7 @@ class Mesh:
         star0_diagonal = np.array(
             [np.sum(areas[np.array(tris)]) / 3.0 for tris in tri_map]
         )
-        return sps.diags(star0_diagonal)
+        return sps.diags(star0_diagonal).tocsc()
 
     def compute_star1_circ(self):
         A = np.zeros((len(self.edges), len(self.edges)), dtype=float)

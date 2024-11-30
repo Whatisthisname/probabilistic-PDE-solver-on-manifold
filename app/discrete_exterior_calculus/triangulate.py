@@ -17,11 +17,10 @@ def should_subdivide(l1, l2, l3):
     # s = (l1 + l2 + l3) / 2
     # area = (s * (s - l1) * (s - l2) * (s - l3)) ** 0.5
     # if area > 0.05:
-    #     return True
+    #     return
 
-    ## TO GET REGULARITY (NOT SURE IF NECESSARY)
-    # if longest >= shortest * 2:
-    #     return True
+    if longest >= shortest * 2:
+        return True
 
     return False
 
@@ -192,6 +191,8 @@ def triangulate_mesh_with_edge_distances(mesh: DEC.Mesh, distance_map: dict):
         )
 
         remove_triangle(data, faces)
+
+    print("made", i, "new splits")
 
     return data, np.array(vertices)
 

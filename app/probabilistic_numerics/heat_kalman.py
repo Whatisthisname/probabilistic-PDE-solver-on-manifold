@@ -7,7 +7,7 @@ import probabilistic_numerics.cholesky_kalman_impl as cholk
 import probabilistic_numerics.IWPprior as IWPprior
 import jax
 
-jax.config.update("jax_debug_nans", True)
+jax.config.update("jax_debug_nans", False)
 
 
 def PIVP_heat_solve(
@@ -194,7 +194,7 @@ def solve_nonlinear_IVP(
     derivatives: int = 2,
     timesteps: int = 100,
     delta_time: float = 0.1,
-    heat_prior: bool = False,
+    prior: Literal["IWP", "heat", "wave"],
     length_scale: float = 1,
     observation_function,
     update_indicator,
@@ -217,31 +217,28 @@ def solve_nonlinear_IVP(
             The amount with which to advance time after each step.
     """
 
-    print("Starting PIVP_heat_solve")
+    # print("Starting PIVP_heat_solve")
 
     grid = len(laplace_matrix)
-    print(grid)
+    # print(grid)
 
     q = derivatives
     """Amount of derivatives we model"""
-
-    curvature_matrix = jnp.zeros((grid, q * grid + grid))
-    curvature_matrix = curvature_matrix.at[:grid, :grid].set(-laplace_matrix)
 
     SDE_coef, SDE_noise = IWPprior.get_IWP_Prior_SDE_coefficients(
         size=grid, derivatives=q
     )
 
-    if heat_prior:
+    if prior == "heat":
         SDE_coef = SDE_coef.at[-grid:, -grid:].set(-laplace_matrix)
+    elif prior == "wave":
+        SDE_coef = SDE_coef.at[-grid:, -2 * grid : -grid].set(-laplace_matrix)
 
     A, Q = IWPprior.fast_get_discrete_system_coeffs(SDE_coef, SDE_noise, delta_time)
 
     Q *= length_scale**2
 
-    print("Discretized IWP prior")
-
-    R = jnp.eye((grid)) * 0.00001 * length_scale**2
+    # print("Discretized IWP prior")
 
     # initial_cov = jnp.zeros((grid * (1 + q), grid * (1 + q)))
     initial_cov = jnp.sqrt(jnp.diag(jnp.array([0.1] * grid + [0.1] * (q * grid)))) * 0
@@ -259,14 +256,14 @@ def solve_nonlinear_IVP(
         delta_time=delta_time,
     )
 
-    print("Filtered on PDE observations")
+    # print("Filtered on PDE observations")
     last_filtered = cholk.CholGauss(filtered.mean[-1], filtered.chol_cov[-1])
     smooth_means, smooth_chol_covs, _samples = cholk.jax_batch_smooth_and_sample(
         last_filtered,
         reverse_parameters,
         n_samples=0,
     )
-    print("Smoothed PDE observations, done.")
+    # print("Smoothed PDE observations, done.")
     stds = jnp.sqrt(
         jnp.diagonal(
             jnp.einsum("ijk,ilk->ijl", smooth_chol_covs, smooth_chol_covs),
