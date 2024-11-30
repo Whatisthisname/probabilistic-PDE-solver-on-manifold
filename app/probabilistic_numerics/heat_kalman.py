@@ -187,6 +187,25 @@ def PIVP_heat_solve_cholesky(
     return smooth_means, smooth_chol_covs
 
 
+def taylor_coef_diag(h: float, state: int, derivatives: int) -> jnp.ndarray:
+    elements: jnp.ndarray = jnp.arange(derivatives, -1, -1)
+    factorial = jnp.cumprod(jnp.arange(1, derivatives + 1))[::-1]
+    factorial = jnp.concatenate([factorial, jnp.array([1])])
+    elements = jnp.power(h, elements)
+    elements = elements / factorial
+    return jnp.repeat(elements, state + 1) * jnp.sqrt(h)
+
+
+def taylor_matrix(h: float, state: int, derivatives: int) -> jnp.ndarray:
+    diag = taylor_coef_diag(h, state, derivatives)
+    return jnp.diag(diag)
+
+
+def inverse_taylor_matrix(h: float, state: int, derivatives: int) -> jnp.ndarray:
+    diag = taylor_coef_diag(h, state, derivatives)
+    return jnp.diag(1 / diag)
+
+
 def solve_nonlinear_IVP(
     *,
     laplace_matrix: jnp.array,
@@ -236,16 +255,11 @@ def solve_nonlinear_IVP(
 
     A, Q = IWPprior.fast_get_discrete_system_coeffs(SDE_coef, SDE_noise, delta_time)
 
-    Q *= length_scale**2
-
     # print("Discretized IWP prior")
-
-    # initial_cov = jnp.zeros((grid * (1 + q), grid * (1 + q)))
-    initial_cov = jnp.sqrt(jnp.diag(jnp.array([0.1] * grid + [0.1] * (q * grid)))) * 0
 
     filtered, reverse_parameters = cholk.jax_batch_extended_filter(
         prior_mean=initial_mean,
-        prior_cholvariance=initial_cov,
+        prior_cholvariance=jnp.zeros((grid * (1 + q), grid * (1 + q))),
         observation_function=observation_function,
         Ch_cond_obs=jnp.zeros((grid, grid)),  # jnp.linalg.cholesky(R) * 0,
         A_cond_state=A,
