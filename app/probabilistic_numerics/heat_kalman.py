@@ -7,7 +7,8 @@ import probabilistic_numerics.cholesky_kalman_impl as cholk
 import probabilistic_numerics.IWPprior as IWPprior
 import jax
 
-jax.config.update("jax_debug_nans", False)
+jax.config.update("jax_debug_nans", True)
+jax.config.update("jax_enable_x64", True)
 
 
 def PIVP_heat_solve(
@@ -187,22 +188,24 @@ def PIVP_heat_solve_cholesky(
     return smooth_means, smooth_chol_covs
 
 
-def taylor_coef_diag(h: float, state: int, derivatives: int) -> jnp.ndarray:
+def _taylor_coef_diag(h: float, state: int, derivatives: int) -> jnp.ndarray:
     elements: jnp.ndarray = jnp.arange(derivatives, -1, -1)
     factorial = jnp.cumprod(jnp.arange(1, derivatives + 1))[::-1]
     factorial = jnp.concatenate([factorial, jnp.array([1])])
     elements = jnp.power(h, elements)
     elements = elements / factorial
-    return jnp.repeat(elements, state + 1) * jnp.sqrt(h)
+    return jnp.repeat(elements, state) * jnp.sqrt(h)
 
 
-def taylor_matrix(h: float, state: int, derivatives: int) -> jnp.ndarray:
-    diag = taylor_coef_diag(h, state, derivatives)
+def get_taylor_add_h(h: float, state: int, derivatives: int) -> jnp.ndarray:
+    diag = _taylor_coef_diag(h, state, derivatives)
+    return jnp.eye(state * (1 + derivatives))
     return jnp.diag(diag)
 
 
-def inverse_taylor_matrix(h: float, state: int, derivatives: int) -> jnp.ndarray:
-    diag = taylor_coef_diag(h, state, derivatives)
+def get_taylor_remove_h(h: float, state: int, derivatives: int) -> jnp.ndarray:
+    diag = _taylor_coef_diag(h, state, derivatives)
+    return jnp.eye(state * (1 + derivatives))
     return jnp.diag(1 / diag)
 
 
@@ -213,7 +216,7 @@ def solve_nonlinear_IVP(
     derivatives: int = 2,
     timesteps: int = 100,
     delta_time: float = 0.1,
-    prior: Literal["IWP", "heat", "wave"],
+    prior: Literal["iwp", "heat", "wave"],
     length_scale: float = 1,
     observation_function,
     update_indicator,
@@ -253,15 +256,29 @@ def solve_nonlinear_IVP(
     elif prior == "wave":
         SDE_coef = SDE_coef.at[-grid:, -2 * grid : -grid].set(-laplace_matrix)
 
-    A, Q = IWPprior.fast_get_discrete_system_coeffs(SDE_coef, SDE_noise, delta_time)
+    taylor_add_h = get_taylor_add_h(delta_time, grid, q)
+    taylor_remove_h = get_taylor_remove_h(delta_time, grid, q)
 
-    # print("Discretized IWP prior")
+    A = taylor_remove_h @ SDE_coef @ taylor_add_h
+    Q = taylor_remove_h @ SDE_noise @ taylor_remove_h.T
+
+    A, Q = IWPprior.fast_get_discrete_system_coeffs(SDE_coef, SDE_noise, delta_time)
+    rank = jnp.linalg.matrix_rank(Q)
+    if rank < grid * (1 + q):
+        print("WARNING: Rank of Q is", rank, ", which is not full rank")
+        Q = Q + jnp.eye(grid * (1 + q)) * 1e-8
+
+    print("Discretized IWP prior")
 
     filtered, reverse_parameters = cholk.jax_batch_extended_filter(
-        prior_mean=initial_mean,
-        prior_cholvariance=jnp.zeros((grid * (1 + q), grid * (1 + q))),
-        observation_function=observation_function,
-        Ch_cond_obs=jnp.zeros((grid, grid)),  # jnp.linalg.cholesky(R) * 0,
+        prior_mean=taylor_remove_h @ initial_mean,
+        # prior_cholvariance= jnp.zeros((grid * (1 + q), grid * (1 + q))),
+        prior_cholvariance=jnp.linalg.cholesky(jnp.eye(grid * (q + 1)) * 0.0001) * 0,
+        observation_function=lambda state, time: observation_function(
+            taylor_add_h @ state, time
+        ),
+        # Ch_cond_obs=jnp.zeros((grid, grid)),
+        Ch_cond_obs=jnp.linalg.cholesky(jnp.eye(grid) * 0.0001) * 0,
         A_cond_state=A,
         b_cond_state=jnp.zeros(grid * (1 + q)),
         Ch_cond_state=jnp.linalg.cholesky(Q),
@@ -269,6 +286,9 @@ def solve_nonlinear_IVP(
         timesteps=timesteps,
         delta_time=delta_time,
     )
+    print(jnp.isnan(filtered.mean).any())
+    print(jnp.isnan(filtered.chol_cov).any())
+    print("Filtered")
 
     # print("Filtered on PDE observations")
     last_filtered = cholk.CholGauss(filtered.mean[-1], filtered.chol_cov[-1])
@@ -285,7 +305,16 @@ def solve_nonlinear_IVP(
             axis2=2,
         )
     )
-    return smooth_means, stds
+
+    # now printing the shapes:
+    print(smooth_means.shape)
+    print(stds.shape)
+    print(taylor_add_h.shape)
+    # for each time step, we have a state vector of size grid * (1 + q). The taylor transfomr is (grid * (1 + q)) x (grid * (1 + q)).
+    # we want to apply the taylor transform to each time step:
+    transformed_mean = jnp.einsum("ij,kj->ki", taylor_add_h, smooth_means)
+    transformed_std = jnp.einsum("ij,kj->ki", taylor_add_h, stds)
+    return transformed_mean, transformed_std
 
 
 def PIVP_heat_solve_dense(

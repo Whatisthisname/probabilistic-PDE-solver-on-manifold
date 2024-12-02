@@ -1,6 +1,8 @@
 import jax
 import jax.numpy as jnp
 
+jax.config.update("jax_enable_x64", True)
+
 
 def get_IWP_Prior_SDE_coefficients(
     *, size: int, derivatives: int
@@ -12,14 +14,14 @@ def get_IWP_Prior_SDE_coefficients(
 
 
 @jax.jit
-def fast_get_discrete_system_coeffs(SDE_coef, SDE_noise, time_step):
+def fast_get_discrete_system_coeffs(SDE_coef, SDE_noise, delta_time):
     state = SDE_coef.shape[0]
 
     blocked = jnp.block(
         [[SDE_coef, SDE_noise], [jnp.zeros((state, state)), -SDE_coef.T]]
     )
 
-    expd = jax.scipy.linalg.expm(blocked * time_step)
+    expd = jax.scipy.linalg.expm(blocked * delta_time)
 
     A = expd[:state, :state]
 

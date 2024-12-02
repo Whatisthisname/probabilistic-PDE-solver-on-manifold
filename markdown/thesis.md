@@ -69,3 +69,26 @@ https://arxiv.org/pdf/2006.10160 - Matérn Gaussian Processes on Manifolds
 https://proceedings.mlr.press/v151/nikitin22a/nikitin22a.pdf - Non-separable Spatio-temporal Graph Kernels via SPDEs
 
 https://users.aalto.fi/~asolin/sde-book/sde-book.pdf Applied Stochastic Differential Equations - Chapter 10 and 12, maybe chapter 1
+
+# Notation
+In this work, the Laplacian operator Δ is understood to act only on the spatial coordinates x.
+
+# Abstract
+
+In this thesis we discuss details of implementing a probabilistic numerical solver for partial differential equations whose spatial domain is not a vector space. We cover topics including the concept of the metric tensor, embeddings of manifolds, mesh representations and refinement, discrete differential operators, ODEs, PDEs, and SDEs, numerical linear algebra, state space models, the (extended) Kálmán-filter and -smoother, and numerical stability. We conclude with experiments that test the efficiency of physically informed prior solutions in non-euclidean domains.
+
+We have structured the thesis as a guide on how to implement and follow the results, and we try to motivate the steps to the best of our efforts.
+
+On a high level, these are the steps that will be explained thoroughly:
+
+1. Choose a riemannian 2-manifold $\mathcal{M}$, either through a metric tensor and coordinate chart, or through an already discretized representation as a triangle mesh.
+2. Choose a time-evolving PDE such as the linear heat equation $\frac{\partial}{\partial t}u(t,\mathbf{x}) = -\Delta u(t,\mathbf{x})$ or perhaps a nonlinear wave-like equation $\frac{\partial^2}{\partial t^2}u(t,\mathbf{x}) = -\Delta u(t,\mathbf{x}) - 3\Delta \tanh(u(\mathbf{x},t))$. Choose a time-window in which the PDE is to be simulated, $\mathcal{T} = [0, T_{final}]$, an initial condition $u(\mathbf{x}, 0)$ and potentially boundary conditions for all times $t\in \mathcal{T}$.
+3. We will convert the PDE in to a system of ODEs using the Method Of Lines, by first discretizing the spatial domain into finite sets of points $V$. We denote the spatial restriction as $u_V(t) := \left . u(x,t)\right|_{x=V} \in \reals^{|V|}$. The discretized domain will require a discrete version of $\Delta$, for which the cotan-Laplacian $L \in \reals^{|V|\times |V|}$, a matrix, presents itself. Depending on the representation of the manifold, there are different ways to compute it. As an example, the linear heat equation then becomes $\frac{\partial}{\partial t}u_V(t) = -Lu_V(t)$ and is a system of ODEs.
+4. Based on the PDE, select a Gauss-Markov prior process distribution $\mathcal{GP}(t)$ that jointly models the solution $u_V(t)$ and its first $q\geq 1$ time-derivatives restricted to spatial points $V$. $q$ must be chosen to be at least as high as the order of the PDE. Specifically, this means we have a single-input (time) multi-output (scalar value and derivatives at spatial points) gaussian process: $\begin{bmatrix} U_V(t) & \frac{\partial}{\partial t} U_V(t) & \cdots & \frac{\partial^q}{\partial t^q} U_V(t)\end{bmatrix}^{\intercal} = \vec{U}_V(t)\sim \mathcal{GP(t)}$.
+5. Define a residual function $R(\vec{u}_v(t)) \in \reals^{|V|}$. Taking again the previous linear heat equation as an example, we choose $R(\vec{u}_V(t)) = u_V(t) + L u_V(t)$, because $R(\vec{u}_V(t)) = \mathbf{0} \iff u_V(t) = -Lu_V(t)$. A solution to the PDE would have residual $\mathbf{0}$ everywhere. The residual function relates the derivatives and solution to each other.
+6. Further discretize the problem by considering $\mathcal{GP(t)}$ only at finite times $\mathbb{T} \subset [0, T_{final}]$. By our choice of a Gauss-Markov prior, the distributions at two different times will be multivariate gaussian and independent given an intermediate times between the pair. This time-space discretized multivariate joint distribution is denoted $\mathbb{GP}_V(t)$ for $t\in \mathbb{T}$. Using the conditional independence structure of the prior, factor the joint distribution into the product of a gaussian prior $\vec{U}_V(0) \sim \mathcal{N}(\mathbf{v}_0, \Sigma_0)$ and multiple 1-step recurrence relation of the form $\vec{U}(\mathbf{v},t+1) \;|\; \vec{u}(\mathbf{v}, t) \sim \mathcal{N}(A\mathbf{v}, \Sigma)$. This is known as a linear gaussian model for some given parameters $A, \Sigma$.
+
+7. Define the posterior distribution over the solution to the PDE as $\mathbb{GP}_V(t) \;| \; \{R(\vec{U}_V(t)) = 0 \; \forall t \in \mathbb{T}\} $ 
+
+8. Implement a Kalman-filter and -smoother to compute the posterior distribution $\mathbb{GP}(\mathbf{v},t) \; | \; \mathbf{v}_0, $
+
