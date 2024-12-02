@@ -1,6 +1,27 @@
 import numpy as np
 from discrete_exterior_calculus import DEC
 import networkx as nx
+import jax
+import jax.numpy as jnp
+import jax.scipy.integrate as inte
+from functools import partial
+
+
+@jax.jit
+def _length_element(t, g1, g2, p1, p2):
+    diff = p1 - p2
+    return jnp.sqrt(diff.T @ g1 @ diff * (1 - t) + diff @ g2 @ diff * t)
+
+
+@partial(jax.jit, static_argnums=(2,))
+def measure_distance(p1, p2, metric):
+    g1 = metric(p1)
+    g2 = metric(p2)
+    n = 20
+    length_elements = jax.vmap(lambda t: _length_element(t, g1, g2, p1, p2))(
+        jnp.linspace(0, 1, n)
+    )
+    return inte.trapezoid(y=length_elements, dx=1 / n)
 
 
 def should_subdivide(l1, l2, l3):
@@ -13,11 +34,11 @@ def should_subdivide(l1, l2, l3):
     if not is_triangle:
         return True
 
-    ## TO ENSURE MINIMUM AREA
-    # s = (l1 + l2 + l3) / 2
-    # area = (s * (s - l1) * (s - l2) * (s - l3)) ** 0.5
-    # if area > 0.05:
-    #     return
+    # TO ENSURE MINIMUM AREA
+    s = (l1 + l2 + l3) / 2
+    area = (s * (s - l1) * (s - l2) * (s - l3)) ** 0.5
+    if area > 0.05:
+        return True
 
     if longest >= shortest * 2:
         return True
@@ -78,6 +99,47 @@ def triangulate_mesh_with_edge_distances(mesh: DEC.Mesh, distance_map: dict):
         short_side, medium_side, long_side = edgelengths
 
         # print("node:")
+
+
+def add_distances_to_mesh_with_metric(mesh: DEC.Mesh, metric):
+    """Returns new faces and vertices after subdividing the mesh according to the edge lengths in distance_map"""
+    opposing_nodes_dict = {}
+
+    for edge_, opposing in zip(mesh.edges, mesh.opposing_vertices):
+        a, b = edge(*edge_)
+        opposing_nodes_dict[(a, b)] = opposing
+
+    faces = {tuple(face) for face in mesh.faces}
+    vertices = list(mesh.vertices[:, [0, 2]])
+
+    data = {}
+    for face in faces:
+        lengths = []
+        for i, j in [(1, 2), (0, 2), (0, 1)]:
+            a, b = edge(face[i], face[j])
+            lengths.append(measure_distance(vertices[a], vertices[b], metric))
+
+        add_triangle_with_opposing_sidelengths(data, face, tuple(lengths))
+
+    triangles_to_visit = list(data.keys())
+    i = 0
+
+    while triangles_to_visit:
+        faces = triangles_to_visit.pop(0)
+
+        if not triangle_exists(data, faces):
+            continue
+
+        edgelengths = np.array(get_triangle_with_opposite_sidelengths(data, faces))
+        faces = np.array(faces)
+        SORT = np.argsort(edgelengths)
+        faces = faces[SORT]
+        edgelengths = edgelengths[SORT]
+
+        medium_node, short_node, corner_node = faces
+        short_side, medium_side, long_side = edgelengths
+
+        # print("node:")
         # print(medium_node, short_node, corner_node)
         # print(short_side, medium_side, long_side)
 
@@ -104,6 +166,9 @@ def triangulate_mesh_with_edge_distances(mesh: DEC.Mesh, distance_map: dict):
 
         i += 1
 
+        t = 0.5
+        vertices.append(vertices[medium_node] * (1 - t) + vertices[short_node] * (t))
+
         # FIX THE OPPOSING TRIANGLE:
         if other_corner_node is not None:
             other_tri = (medium_node, short_node, other_corner_node)
@@ -111,17 +176,22 @@ def triangulate_mesh_with_edge_distances(mesh: DEC.Mesh, distance_map: dict):
                 get_triangle_with_opposite_sidelengths(data, other_tri)
             )
 
-            assert o_long_side == long_side, f"{o_long_side} != {long_side}"
+            # assert o_long_side == long_side, f"{o_long_side} != {long_side}"
 
-            cos_other_medium_angle = (
-                o_medium_side**2 + long_side**2 - o_short_side**2
-            ) / (2 * o_medium_side * long_side)
+            # cos_other_medium_angle = (
+            #     o_medium_side**2 + long_side**2 - o_short_side**2
+            # ) / (2 * o_medium_side * long_side)
 
-            other_new_length = np.sqrt(
-                (long_side / 2) ** 2
-                + o_medium_side**2
-                - 2 * (long_side / 2) * o_medium_side * cos_other_medium_angle
-            ).round(3)
+            # other_new_length = np.sqrt(
+            #     (long_side / 2) ** 2
+            #     + o_medium_side**2
+            #     - 2 * (long_side / 2) * o_medium_side * cos_other_medium_angle
+            # ).round(3)
+
+            other_new_length = measure_distance(
+                vertices[new_node], vertices[other_corner_node], metric
+            )
+            (metric,)
 
             opposing_nodes_dict[edge(new_node, other_corner_node)] = [
                 short_node,
@@ -154,10 +224,6 @@ def triangulate_mesh_with_edge_distances(mesh: DEC.Mesh, distance_map: dict):
                 tuple(np.sort([new_node, short_node, other_corner_node]))
             )
 
-        # FIX THE CURRENT TRIANGLE:
-        t = 0.5
-        vertices.append(vertices[medium_node] * (1 - t) + vertices[short_node] * (t))
-
         opposing_nodes_dict[edge(new_node, medium_node)] = list.copy(
             opposing_nodes_dict[edge(medium_node, short_node)]
         )
@@ -165,7 +231,17 @@ def triangulate_mesh_with_edge_distances(mesh: DEC.Mesh, distance_map: dict):
             opposing_nodes_dict[edge(medium_node, short_node)]
         )
 
-        new_length = np.round(0.5 * (short_side + medium_side), 4)
+        # new_length = np.round(0.5 * (short_side + medium_side), 4)
+        short_mid_length = measure_distance(
+            vertices[new_node],
+            vertices[short_node],
+            metric,
+        )
+        medium_mid_length = measure_distance(
+            vertices[new_node],
+            vertices[medium_node],
+            metric,
+        )
 
         opposing_nodes_dict[edge(new_node, corner_node)] = [short_node, medium_node]
         opposing_nodes_dict[edge(medium_node, corner_node)].remove(short_node)
@@ -181,13 +257,13 @@ def triangulate_mesh_with_edge_distances(mesh: DEC.Mesh, distance_map: dict):
         add_triangle_with_opposing_sidelengths(
             data,
             (medium_node, new_node, corner_node),
-            (new_length, medium_side, long_side / 2),
+            (medium_mid_length, medium_side, long_side / 2),
         )
 
         add_triangle_with_opposing_sidelengths(
             data,
             (short_node, new_node, corner_node),
-            (new_length, short_side, long_side / 2),
+            (short_mid_length, short_side, long_side / 2),
         )
 
         remove_triangle(data, faces)
