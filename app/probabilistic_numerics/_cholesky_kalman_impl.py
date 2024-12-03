@@ -225,16 +225,9 @@ def jax_batch_extended_filter(
     def loop(carry: Carry, input):
         time, step, update = input
 
-        filtered_state, gamma = jax.lax.cond(
-            update,
-            integrate_observation,  # <- if true
-            lambda prior, time, step: (carry.prior, 0.0),  # <- if false
-            *(carry.prior, time, step),
-        )
-
         state_state_dist = chol_marginal_and_reverse(
-            filtered_state.mean,
-            filtered_state.chol_cov,
+            carry.prior.mean,
+            carry.prior.chol_cov,
             A_cond_state,
             b_cond_state,
             Ch_cond_state,
@@ -242,6 +235,13 @@ def jax_batch_extended_filter(
 
         predicted_next_state = CholGauss(
             mean=state_state_dist.m_out, chol_cov=state_state_dist.Ch_out
+        )
+
+        filtered_state, gamma = jax.lax.cond(
+            update,
+            integrate_observation,  # <- if true
+            lambda prior, time, step: (prior, 0.0),  # <- if false
+            *(predicted_next_state, time, step),
         )
 
         carry = Carry(

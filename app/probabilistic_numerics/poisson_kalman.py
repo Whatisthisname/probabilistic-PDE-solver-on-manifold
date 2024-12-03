@@ -4,7 +4,7 @@ import scipy.linalg as la
 import scipy.integrate as inte
 import jax
 import jax.numpy as jnp
-import probabilistic_numerics.covariance_kalman_impl as jaxk
+import app.probabilistic_numerics._covariance_kalman_impl as jaxk
 
 rng = jax.random.PRNGKey(0)
 grid = 50

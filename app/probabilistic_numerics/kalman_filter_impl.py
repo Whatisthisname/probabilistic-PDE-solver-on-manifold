@@ -2,8 +2,8 @@ from typing import Literal
 import matplotlib.pyplot as plt
 
 import jax.numpy as jnp
-import probabilistic_numerics.covariance_kalman_impl as jaxk
-import probabilistic_numerics.cholesky_kalman_impl as cholk
+import app.probabilistic_numerics._covariance_kalman_impl as jaxk
+import app.probabilistic_numerics._cholesky_kalman_impl as cholk
 import probabilistic_numerics.IWPprior as IWPprior
 import jax
 
@@ -151,7 +151,9 @@ def PIVP_heat_solve_cholesky(
 
     print("Built IWP prior")
 
-    A, Q = IWPprior.matrix_fraction_decomposition(SDE_coef, SDE_noise, delta_time)
+    A, Q = IWPprior.perform_matrix_fraction_decomposition(
+        SDE_coef, SDE_noise, delta_time
+    )
 
     print("Discretized IWP prior")
 
@@ -199,19 +201,19 @@ def _taylor_coef_diag(h: float, state: int, derivatives: int) -> jnp.ndarray:
 
 def get_taylor_add_h(h: float, state: int, derivatives: int) -> jnp.ndarray:
     diag = _taylor_coef_diag(h, state, derivatives)
-    return jnp.eye(state * (1 + derivatives))
+    # return jnp.eye(state * (1 + derivatives))
     return jnp.diag(diag)
 
 
 def get_taylor_remove_h(h: float, state: int, derivatives: int) -> jnp.ndarray:
     diag = _taylor_coef_diag(h, state, derivatives)
-    return jnp.eye(state * (1 + derivatives))
+    # return jnp.eye(state * (1 + derivatives))
     return jnp.diag(1 / diag)
 
 
 def solve_nonlinear_IVP(
     *,
-    prior_matrix: jnp.array,
+    prior_dynamics: jnp.array,
     initial_mean: jnp.array,
     derivatives: int = 2,
     timesteps: int = 100,
@@ -240,34 +242,34 @@ def solve_nonlinear_IVP(
     """
 
     q = derivatives
-    state_size = len(initial_mean) // (q + 1)
+    n_state = len(initial_mean) // (q + 1)
 
     SDE_coef, SDE_noise = IWPprior.get_IWP_Prior_SDE_coefficients(
-        size=state_size, derivatives=q
+        size=n_state, derivatives=q
     )
 
-    if prior == "heat":  # place prior matrix in bottom right
-        SDE_coef = SDE_coef.at[-state_size:, -state_size:].set(prior_matrix)
-    elif prior == "wave":  # place prior matrix in left of bottom right
-        SDE_coef = SDE_coef.at[-state_size:, -2 * state_size : -state_size].set(
-            prior_matrix
-        )
+    if prior == "heat":  # place prior dynamics in bottom right
+        SDE_coef = SDE_coef.at[-n_state:, -n_state:].set(prior_dynamics)
+    elif prior == "wave":  # place prior dynamics in left of bottom right
+        SDE_coef = SDE_coef.at[-n_state:, -2 * n_state : -n_state].set(prior_dynamics)
 
-    taylor_add_h = get_taylor_add_h(delta_time, state_size, q)
-    taylor_remove_h = get_taylor_remove_h(delta_time, state_size, q)
+    taylor_add_h = get_taylor_add_h(delta_time, n_state, q)
+    taylor_remove_h = get_taylor_remove_h(delta_time, n_state, q)
 
     A = taylor_remove_h @ SDE_coef @ taylor_add_h
-    Q = taylor_remove_h @ SDE_noise @ taylor_remove_h.T
+    Q = taylor_remove_h @ SDE_noise
 
-    A, Q = IWPprior.matrix_fraction_decomposition(SDE_coef, SDE_noise, delta_time)
-    rank = jnp.linalg.matrix_rank(Q)
-    if rank < state_size * (1 + q):
+    A, Q = IWPprior.perform_matrix_fraction_decomposition(
+        SDE_coef, SDE_noise, delta_time
+    )
+
+    if rank := jnp.linalg.matrix_rank(Q) < n_state * (1 + q):
         print(
             "WARNING: Rank of Q is",
             rank,
             ", which is not full rank. Applying 1e-8 diagonal jitter",
         )
-        Q = Q + jnp.eye(state_size * (1 + q)) * 1e-8
+        Q = Q + jnp.eye(n_state * (1 + q)) * 1e-8
 
     if (
         jnp.linalg.matrix_rank(observation_uncertainty)
@@ -279,13 +281,13 @@ def solve_nonlinear_IVP(
 
     filtered, reverse_parameters = cholk.jax_batch_extended_filter(
         prior_mean=taylor_remove_h @ initial_mean,
-        prior_cholvariance=jnp.zeros((state_size * (q + 1), state_size * (q + 1))),
+        prior_cholvariance=jnp.zeros((n_state * (q + 1), n_state * (q + 1))),
         observation_function=lambda state, time, step: observation_function(
             taylor_add_h @ state, time, step
         ),
         Ch_cond_obs=observation_uncertainty_chol,
         A_cond_state=A,
-        b_cond_state=jnp.zeros(state_size * (1 + q)),
+        b_cond_state=jnp.zeros(n_state * (1 + q)),
         Ch_cond_state=jnp.linalg.cholesky(Q),
         update_indicator=update_indicator,
         timesteps=timesteps,

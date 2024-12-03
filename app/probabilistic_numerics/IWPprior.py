@@ -14,7 +14,7 @@ def get_IWP_Prior_SDE_coefficients(
 
 
 @jax.jit
-def matrix_fraction_decomposition(SDE_coef, SDE_noise, delta_time):
+def perform_matrix_fraction_decomposition(SDE_coef, SDE_noise, delta_time):
     state = SDE_coef.shape[0]
 
     blocked = jnp.block(

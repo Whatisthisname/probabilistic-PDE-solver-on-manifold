@@ -377,7 +377,7 @@ if __name__ == "__main__":
     Q = jnp.array([[0, 0, 0], [0, 0, 0], [0, 0, 1.0]])
     """State noise covariance"""
 
-    A, Q = IWPprior.matrix_fraction_decomposition(A, Q, 1.0)
+    A, Q = IWPprior.perform_matrix_fraction_decomposition(A, Q, 1.0)
 
     H = jnp.array([[1.0, 0, 0.0]])
     # H = jnp.eye(3)

@@ -163,7 +163,7 @@ if __name__ == "__main__":
 
     import numpy as np
     from app.discrete_exterior_calculus import DEC
-    from probabilistic_numerics import heat_kalman
+    from app.probabilistic_numerics import kalman_filter_impl
     from traditional_numerics import heat_solver as hs
     import scipy.sparse as sps
 
@@ -189,7 +189,7 @@ if __name__ == "__main__":
     timesteps = 10
     delta_time = 0.5
 
-    p_means, p_chol_covs = heat_kalman.PIVP_heat_solve_cholesky(
+    p_means, p_chol_covs = kalman_filter_impl.PIVP_heat_solve_cholesky(
         laplace_matrix=-laplacian,
         initial_mean=initial_value,
         derivatives=derivatives,
