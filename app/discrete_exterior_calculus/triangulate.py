@@ -37,7 +37,7 @@ def should_subdivide(l1, l2, l3):
     # TO ENSURE MINIMUM AREA
     s = (l1 + l2 + l3) / 2
     area = (s * (s - l1) * (s - l2) * (s - l3)) ** 0.5
-    if area > 0.05:
+    if area > 0.1:
         return True
 
     if longest >= shortest * 2:
@@ -165,7 +165,8 @@ def add_distances_to_mesh_with_metric(mesh: DEC.Mesh, metric):
             other_corner_node = None
 
         i += 1
-
+        if i >= 40:
+            break
         t = 0.5
         vertices.append(vertices[medium_node] * (1 - t) + vertices[short_node] * (t))
 

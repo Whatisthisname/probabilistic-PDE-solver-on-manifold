@@ -200,13 +200,13 @@ def jax_batch_extended_filter(
 ) -> tuple[list[CholGauss], ReverseParams]:
     Carry = namedtuple("Carry", ["prior", "output_noise_scale_acc"])
 
-    def integrate_observation(prior: CholGauss, time: float):
-        obs_jac = jax.jacobian(observation_function, argnums=0)(prior.mean, time)
+    def integrate_observation(prior: CholGauss, time: float, step: int):
+        obs_jac = jax.jacobian(observation_function, argnums=0)(prior.mean, time, step)
         filtered_state, observation_marginal = get_posterior_and_marginal(
             prior.mean,
             prior.chol_cov,
             obs_jac,
-            observation_function(prior.mean, time) - obs_jac @ prior.mean,
+            observation_function(prior.mean, time, step) - obs_jac @ prior.mean,
             Ch_cond_obs,
             observation=jnp.zeros(obs_jac.shape[0]),
         )
@@ -223,13 +223,13 @@ def jax_batch_extended_filter(
         return filtered_state, log_observation_prob
 
     def loop(carry: Carry, input):
-        time, update = input
+        time, step, update = input
 
         filtered_state, gamma = jax.lax.cond(
             update,
             integrate_observation,  # <- if true
-            lambda prior, time: (carry.prior, 0.0),  # <- if false
-            *(carry.prior, time),
+            lambda prior, time, step: (carry.prior, 0.0),  # <- if false
+            *(carry.prior, time, step),
         )
 
         state_state_dist = chol_marginal_and_reverse(
@@ -264,7 +264,11 @@ def jax_batch_extended_filter(
             prior=CholGauss(prior_mean, prior_cholvariance),
             output_noise_scale_acc=0.0,
         ),
-        xs=(jnp.arange(timesteps) * delta_time, update_indicator),
+        xs=(
+            jnp.arange(timesteps) * delta_time,  # time
+            jnp.arange(timesteps),  # step
+            update_indicator,  # update
+        ),
     )
 
     gamma = jnp.sqrt(carry.output_noise_scale_acc / (jnp.sum(update_indicator) + 2))

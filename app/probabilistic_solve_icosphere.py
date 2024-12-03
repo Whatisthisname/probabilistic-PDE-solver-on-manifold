@@ -70,12 +70,12 @@ def solve(
 
     if problem in second_order_problems:
 
-        def non_linear_observation_function(state, time):
+        def non_linear_observation_function(state, time, step):
             return (f(E_0 @ state)) - E_2 @ state
 
     if problem in first_order_problems:
 
-        def non_linear_observation_function(state, time):
+        def non_linear_observation_function(state, time, step):
             return (f(E_0 @ state)) - E_1 @ state
 
     initial_value = np.zeros(n * (q + 1))
@@ -107,14 +107,14 @@ def solve(
                 raise AssertionError("q >= 4 not supported, numerically unstable")
 
     delta_time = end_time / timesteps
-    solution_times = jnp.linspace(0, end_time, timesteps)
+    solution_times = jnp.linspace(0, end_time, timesteps, endpoint=False)
 
     update_indicator = jnp.ones(timesteps, dtype=bool)
     update_indicator = update_indicator.at[0].set(False)
     # update_indicator = update_indicator.at[timesteps // 2 :].set(False)
 
     kalman_sol, u_std = heat_kalman.solve_nonlinear_IVP(
-        laplace_matrix=-mesh.laplace_matrix,
+        prior_matrix=mesh.laplace_matrix,
         initial_mean=initial_value,
         derivatives=derivatives,
         timesteps=timesteps,
@@ -122,6 +122,7 @@ def solve(
         prior=prior,
         observation_function=non_linear_observation_function,
         update_indicator=update_indicator,
+        observation_uncertainty=jnp.zeros(n * (q + 1)),
     )
 
     interpolated_means = jax.vmap(
