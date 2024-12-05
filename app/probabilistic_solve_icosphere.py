@@ -81,6 +81,7 @@ def solve(
     initial_value = np.zeros(n * (q + 1))
     initial_value[ymost_point] = 2.0
     initial_value[yleast_point] = -2.0
+
     if True:
         if problem in first_order_problems:
             if q >= 1:
@@ -113,7 +114,7 @@ def solve(
     update_indicator = update_indicator.at[0].set(False)
     # update_indicator = update_indicator.at[timesteps // 2 :].set(False)
 
-    kalman_sol, u_std = heat_kalman.solve_nonlinear_IVP(
+    _samples, kalman_sol, u_std = heat_kalman.solve_nonlinear_IVP(
         prior_matrix=mesh.laplace_matrix,
         initial_mean=initial_value,
         derivatives=derivatives,
@@ -122,7 +123,8 @@ def solve(
         prior=prior,
         observation_function=non_linear_observation_function,
         update_indicator=update_indicator,
-        observation_uncertainty=jnp.zeros(n * (q + 1)),
+        observation_uncertainty=jnp.zeros((n, n)),
+        n_samples=0,
     )
 
     interpolated_means = jax.vmap(

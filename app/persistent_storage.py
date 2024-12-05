@@ -57,7 +57,7 @@ experiment_setup["heat and tanh"] = {
         3200,
         3600,
         4000,
-    ],
+    ][:10],
 }
 experiment_setup["heat small tanh"] = {
     "problem_title": "∂u/∂t = -Δu -0.1*tanh(Δu)",
