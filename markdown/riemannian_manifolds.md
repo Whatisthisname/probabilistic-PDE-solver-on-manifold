@@ -5,7 +5,7 @@ This section covers relevant knowledge of Riemannian 2-Manifolds by motivating a
 
 For millenia society thought that earth was a flat, because that's what it looks like up close. If we model earth as a unit-ball, then its surface, the unit-sphere, looks locally flat. Mathematically, we say that each point on the sphere is locally topologically equivalent (homeomorphic) to $\reals^2$.
 
-### Definition: Manifold
+## Definition: Manifold
 An n-manifold is a topological space with the property that each point has a neighborhood that is homeomorphic to an open subset of $\reals^n$.
 
 ---
@@ -14,19 +14,19 @@ Although the surface of the earth lies in our physical 3-dimensional space, we h
 [INSERT PICTURE OF EQUIRECTANGULAR MAP https://en.wikipedia.org/wiki/Equirectangular_projection]
 
 ---
-### Definition: Coordinate Chart
+## Definition: Coordinate Chart
 A 2D coordinate chart of $\mathcal{M}$ is a pair $(C, f)$, where $f$ is a diffeomorphism $$f: U \to C$$ that maps open subset $U$ of a 2-manifold $\mathcal{M}$ to an open subset $C \subseteq \reals^2$, resulting in a real-vector space representation of $U$.
 
 ---
-### FOOTNOTE: 🦶
+## FOOTNOTE: 🦶
 A diffeomorphism is a bijection between two differentiable manifolds such that both it and its inverse are continuous. Strictly speaking, a homeomorphism is enough here (meaning not necessarily differentiable), but since we are ultimately interested in doing calculus on our manifold, we need a differentiable representation of it.
 
 ---
 
-### Example: Coordinate Chart
+## Example: Coordinate Chart
 We will use the surface of the earth as $\mathcal{M}$ and construct a our own coordinate chart. For simplicity, we will only be mapping the open upper hemisphere $\subset \mathcal{M}$ to the open unit-disc $C$ by projecting the hemisphere onto the unique plane that cuts through the equator. 
 
-An invertible map from the unit-disc to the hemisphere is given by $$\text{disc\_to\_hemisphere}(\begin{bmatrix}x & y\end{bmatrix}^\top) = \begin{bmatrix}x & y & \sqrt{1 - x^2 - y^2}\end{bmatrix}^\top $$ The inverse of this map corresponds exactly to projecting the hemisphere onto the equatorial plane.
+An invertible map from the unit-disc to the hemisphere is given by $$\text{disc-to-hemisphere}(\begin{bmatrix}x & y\end{bmatrix}^\top) = \begin{bmatrix}x & y & \sqrt{1 - x^2 - y^2}\end{bmatrix}^\top $$ The inverse of this map corresponds exactly to projecting the hemisphere onto the equatorial plane.
 [PICTURE OF UNIT DISC AND DOME WITH ARROW MAPPING THEM].
 
 [PICTURE OF GOOGLE EARTH SEEING PART OF NORTHERN HEMISPHERE]
@@ -37,14 +37,14 @@ When we use our map on the real chart, we end up with the above map. Note how th
 ---
 
 
-### Metric Tensor
+## Metric Tensor
 
 Good maps are characterized by being amenable to direct measurements. A weakness of the Equirectangular Projection is the distortion of landmasses at the poles. They are disproportionately big when compared to a countries such as Kenya at the equator. This difference in scale invalidates direct measurements of lengths using a conventional ruler. The Metric Tensor quantifies the distortions induced by the map, and is a vital tool for measurements on coordinate charts.
 
 Before giving a definition, we will further motivate the Metric Tensor by pointing out what one takes for granted in Euclidean space (specifically, $\reals^2$). $\reals^2$ is a vector space, meaning that linear combinations of the basis-vectors $e_1$ and $e_2$ are still members of $\reals^2$. In a vector space we can additionally define a norm and an inner product. The Euclidean norm is defined as $||(x,y)||_2 = \sqrt{x^2 + y^2}$ and is used to define the distance $d(\vec{a}, \vec{b}) = ||\vec{a}-\vec{b}||_2$. The Euclidean inner product $\langle \vec{a},\vec{b} \rangle = a_1b_1 +a_2b_2$ relates to the angle $\theta$ (radians) between vectors through $\frac{\langle \vec{a},\vec{b} \rangle}{||\vec{a}||||\vec{b}||} = \cos(\theta)$.
 
 ---
-### FOOTNOTE: 🦶
+## FOOTNOTE: 🦶
 $\reals^2$ is technically the set of all ordered pairs of real numbers, but in the context of differential geometry, it is also the Euclidean plane.
 
 ---
@@ -55,13 +55,13 @@ Before diving into the metric tensor, we will have to define the notion of tange
 
 ---
 
-### Definition: Tangent space
+## Definition: Tangent space
 The tangent space $\mathcal{TM}_p$ at a point $p$ on a 2-manifold $\mathcal{M}$ is the 2-dimensional real vector space consisting of all tangent vectors to $\mathcal{M}$ at $p$. Each tangent vector can be associated with the velocity of a curve on $\mathcal{M}$ passing through $p$. 
 
-### Example: Tangent space
+## Example: Tangent space
 The tangent space is a local "linearization" of the manifold around a point $p$. On the sphere, the tangent space of the north pole is the unique tangent plane that intersects only the north pole. Moving from $p$ along a vector from the tangent space will in general take one away from the manifold.
 
-### Definition: Metric Tensor
+## Definition: Metric Tensor
 
 When using a 2-dimensional coordinate system, the 2D metric tensor is a symmetric, positive-definite 2×2 matrix $g(p) = M \in \reals^{2\times 2}$  where $p$ is a point on the two-dimensional surface specified in local coordinates. $M$ provides a way to measure lengths, angles by describing how the infinitesimal length $ds$ of a change in local coordinates $t=\begin{bmatrix} dx & dy\end{bmatrix}^\top \in \mathcal{TM}_p$ is computed as:
 
@@ -73,7 +73,7 @@ and angle $\theta$ between tangent vectors $t, t^\prime \in \mathcal{TM}_p$ are 
 
 The explicit dependance of the metric tensor $g(p)$ on the coordinate $p$ is often omitted in notation, but we will keep it explicit. 
 
-### Definition: Riemannian Metric
+## Definition: Riemannian Metric
 
 A 2D Riemannian metric $g$ maps each local coordinate $p\in C$ to a metric tensor 
 $$g: C\to \reals^{2\times 2}$$
@@ -88,11 +88,11 @@ Positive-definiteness in the definition ensures that all squared infinitesimal d
 
 ---
 
-### FOOTNOTE: 🦶
+## FOOTNOTE: 🦶
 $g(p) = \begin{bmatrix} 1 & 0 \\ 0 & 1\end{bmatrix}$ is the metric tensor of $\reals^2$, which is independent of position $p$. This reflects the (perhaps unsurprising) fact that the Pythagorean theorem holds at all positions in $\reals^2$, not just around the origin or some other specific point.
 
 ---
-### Example: Rank of Metric Tensor
+## Example: Rank of Metric Tensor
 
 The rank of the 2D metric tensor $g(p)$ will always be 2 by positive-definiteness. However, rank-deficit metric tensors can be interesting to study for intuition. 
 
@@ -102,82 +102,72 @@ In the same scenario the $\cos(\theta)$ formula will yield only $0$ and $\pi$, w
 
 For a rank 0 matrix (which is the 2x2 zero matrix), $ds = 0$, and angles are not defined as a division by zero occurs.
 
-### Example: Determinant of Metric Tensor
+## Example: Determinant of Metric Tensor
 
 The determinant of the 2D Metric Tensor reflects how areas are scaled locally. By positive-definiteness, the determinant will be strictly positive.
 
-### Example: Metric Tensor, computing lengths of paths
+## Example: Measuring the length of a path with the Metric Tensor
 
-If a sailor draws a path (not necessarily straight) on their chart, they will be keen to know the length it represents. From the distortion of the maps, we have determined that we cannot simply measure directly, as lengths are not guaranteed to have been represented faithfully. To measure exactly the length of a path, we will have to integrate the infinitesimal length $ds$ of the velocity vector of the line over the whole span of the line. 
+If a sailor plans a route (not necessarily straight) on their chart, they will be keen to know the length it represents. From the distortion of the maps seen earlier, we have determined that we cannot simply measure directly, as lengths are not guaranteed to have been represented faithfully. To measure exactly the length of a route, we will have to integrate an expression the infinitesimal length $ds$ of the velocity vector of the line over the whole span of the line. 
 
-We will parameterize the path $P$ with parameter $t \in (0, T)$ to get $P: [0, T] \to \reals^2$. $P$ is in fact a 1-manifold, and $t$ is a local coordinate. 
+We will parameterize the route $r$ with parameter $t \in (0, T)$ to get $r: (0, T) \to \reals^2$. $r$ is in fact a 1-manifold, and the parameterization a choice of local coordinate system. 
 
-Symbolically, the length can be written as $L(P) = \int_P ds$ where $ds$ is the infinitesimal length obtained from the metric tensor. For someone interested in a numerical value, this expression is not very workable. We will swap to our local parameterization:
+Symbolically, the length can be written simply as $L(r) = \int_r ds$ where $ds$ is the infinitesimal length obtained from the metric tensor $g(p)$. But this is not very computable definition. By using the local parameterization we get:
 
 $$\begin{align*} 
-L(s) &= \int_P ds 
-\\
-&\overset{\star}{=} \int_{[0, T]} \sqrt{g(P(t))_{11}dx^2 + 2g(P(t))_{12}dxdy + 2g(P(t))_{22}dy^2} \; dt
-\\
-&\overset{\dagger}{=} \int_{[0, T]} \sqrt{\nabla P(t)^\top g(P(t))\; \nabla P(t)} \; dt
+L(r) = \int_{[0, T]} \sqrt{\nabla r(t)^\top g(r(t))\; \nabla r(t)} \; dt
 \end{align*}$$
 
-At $\star$ we insert the definition from the metric tensor and make explicit swap from the coordinate-free notation to the explicit local-parameterization
-
-The length is $ds = \sqrt{dx^2 + dy^2}$, and $dx$ (and $dy$) are $\frac{\partial P}{\partial x}$.
-$dx$ is a differential 1-form, and can be thought of as a vector field defined on the line $P$, pointing in direction $x$ with magnitude equal to the partial derivative strength. 
-$\int_P \sqrt{dx^2 + dy^2} = \int_0^T ||dP|| = \int_0^T ||\frac{\partial P}{\partial x} \text{d}x + \frac{\partial P}{\partial y}\text{d}y|| = \int_0^T ||\frac{\partial P}{\partial x} \text{d}x + \frac{\partial P}{\partial y}\text{d}y||$ 
-
-To measure the length of a parameterized curve $P: (0, T) \to \reals^2$, we traditionally express it like this: $$||P|| = \int_0^T \sqrt{\frac{\partial P}{\partial x}^2 + \frac{\partial P}{\partial y}^2} \text{d}t$$ 
-This example of a parametrized curve can be analyzed through the lenses of differential geometry. The image of the map $P$, $\mathcal{M} \subset \reals^2$, is our one-dimensional manifold embedded in $\reals^2$. 
-If $P$ is diffeomorphic (invertible and both $P$ and $P^{-1}$ are continuously differentiable), then $(P^{-1}, \mathcal{M})$ is a chart of $\mathcal{M}$.
-The length expression above can be broken down in the following way: The manifold is intrinsically one-dimensional. This is why our integral is on the real euclidean line from $0$ to $T$. The integrand $\sqrt{\frac{\partial P}{\partial x}^2 + \frac{\partial P}{\partial y}^2}\text{d}t$ is a differential 1-form. It becomes a differential 1-form because it contains the term $\text{d}t$, and $\sqrt{\frac{\partial P}{\partial x}^2 + \frac{\partial P}{\partial y}^2}$ is its magnitude. 
-
-Had we taken just the expression $\int_0^T 1\cdot \text{d}t = T$, where '$1$' can be thought of as the positively oriented tangent vector of $\reals$, we would simply be measuring directly in the local coordinate system, not accounting for the stretching of the embedded manifold. We would like to keep measuring in our local coordinate system, but will have to adjust our measurement at each point to account for the stretching between the embedded manifold and the local coordinate system. The quantity $q := \sqrt{\frac{\partial P}{\partial x}^2 + \frac{\partial P}{\partial y}^2}$ is the magnitude of the line element on our manifold, which tells us how much the space is stretched or compressed relative to the local coordinate system. 
-This quantity is the inner product of tangent vectors on the embedded manifold, which can be obtained by linearizing $P$ at each point using the Jacobian, $\sqrt{\nabla P^\top \nabla P} = ||\nabla P|| = q$, the length of the tangent vector on the manifold in $\reals^2$. 
-
-As mentioned, we can use the metric tensor to measure lengths of tangent vectors. On $\reals$, the tangent 'vector' is the scalar '$1$'. This gives us a distance measurement of $\sqrt{g_p(1, 1)} = \sqrt{1^\top q^2 1} = q$, telling us the the metric tensor is $q^2$, the inner product of the tangent vectors in the ambient space.  
-
-The metric tensor tells us how we should adjust our local coordinate measurements if we want to measure w.r.t. how the manifold 'looks' like in the embedded euclidean space.
+Even for many seemingly simple cases of $g$ and $r$ this integral has no analytic solution, because it turns out to be an instance of an elliptic integral, which are integrals of the form $\int \sqrt{P(t)}$, where $P$ is some polynomial of $t$. There will be an instance of this later, where we will resort to numerical methods.
 
 
-
-### Example: Computing the Metric on the chart induced by the 3D hemisphere
+## Example: Computing the Metric on the chart induced by the 3D hemisphere
 Starting from our previous map from the disc,
-$$f(\begin{bmatrix}x & y\end{bmatrix}^\top) := \text{disc\_to\_hemisphere}(\begin{bmatrix}x & y\end{bmatrix}^\top) = \begin{bmatrix}x & y & \sqrt{1 - x^2 - y^2}\end{bmatrix}^\top $$ 
+$$\text{disc-to-hemisphere}(\begin{bmatrix}x & y\end{bmatrix}^\top) = \begin{bmatrix}x & y & \sqrt{1 - x^2 - y^2}\end{bmatrix}^\top $$ 
 The Riemannian metric on the chart induced by the 3D hemisphere can be computed as 
-$$g(p) = J_g(p)^\top J_g(p) \in \reals^{2\times 2}$$ 
-where $J_g(p) \in \reals^{3\times 2}$ is the Jacobian matrix, which maps tangent vectors $ \in \reals^2$ (directions from point $p$) to tangents vectors $\in \mathcal{TM} \subset \reals^3$ (directions along the manifold at point $f(p) \in \reals^3$).
-The jacobian comes out as
-$$ J_g(\begin{bmatrix}x & y \end{bmatrix}^\top) = \begin{bmatrix}1 & 0 \\ 0 & 1 \\ \frac{-x}{\sqrt{1-x^2-y^2}} & \frac{-y}{\sqrt{1-x^2-y^2}}\end{bmatrix}$$
+$$g(p) = J(p)^\top J(p) \in \reals^{2\times 2}$$ 
+where $J(p) \in \reals^{3\times 2}$ is the Jacobian matrix of $\text{disc-to-hemisphere}$ at point $p$, which maps tangent vectors $ \in \reals^2$ to tangents vectors $\in \mathcal{TM} \subset \reals^3$.
+The Jacobian comes out as
+$$ J\left(\begin{bmatrix}x \\ y \end{bmatrix}\right) = \begin{bmatrix}1 & 0 \\ 0 & 1 \\ \frac{-x}{\sqrt{1-x^2-y^2}} & \frac{-y}{\sqrt{1-x^2-y^2}}\end{bmatrix}$$
 which gives the final metric of
-$$g_{\text{hemisphere}}(\begin{bmatrix}x & y \end{bmatrix}^\top)=\frac{1}{1-x^2-y^2} \begin{bmatrix} 1 & xy \\ xy & 1 \end{bmatrix}$$
+$$g_{\text{hemisphere}}\left(\begin{bmatrix}x \\ y \end{bmatrix}\right)=\frac{1}{1-x^2-y^2} \begin{bmatrix} 1 & xy \\ xy & 1 \end{bmatrix}$$
 This is symmetric, positive definite and well-defined in for $x^2+y^2 < 1$, which is exactly the open unit-disc. At the center, $(0,0)$, the metric tensor coincides with the Euclidean metric, reflecting the fact that the north-pole did not get distorted during the projection, as it was already aligned with the plane we project onto.
 
-### Example: Visualizing the Metric Tensor
+## Example: Visualizing the Metric Tensor
 In cartography, a common way to visualize the degree distortion of the chart is using the Tissot Indicatrix. [FIGURE OF Equirectangular TISSOT]. It shows how patches of equal area and shape on the earth will be represented on the map. The Equirectangular Projection necessarily stretches the two poles into two huge areas. An approximation of the Tissot Indicatrix can be computed using the metric tensor, by showing the eigenvectors and -values of the inverse metric tensor. [FIGURE OF Hemisphere TISSOT. We can see that, when getting close to the border, there is heavy compression along the outwards radial latitudal direction, while the longitudal distances are unaltered.]
+[FIGURE of projected streched sheet metric]
+[FIGURE of projected bell metric]
+[FIGURE of hyperbolic metric]
 
-
-### Definition: Riemannian Manifold
+## Definition: Riemannian Manifold
 A Riemannian Manifold is a pair $\big(\mathcal{M}, g\big)$ of a smooth manifold $\mathcal{M}$ with Riemannian metric $g$.
-### Definition: Isometric immersions and embeddings
-An isometric immersion of a Riemannian 2-Manifold $\big(\mathcal{M}, g\big)$ into a 2-dimensional submanifold $\hat{\mathcal{M}} \in \reals^3$ is a map $f: \mathcal{M} \to \hat{\mathcal{M}}$ such that the distance between any two points in $\mathcal{M}$ under $g$ is the same as the distance between their images under $f$ measured along the surface of in $\reals^3$. If $f$ is additionally a bijection, meaning that $\hat{\mathcal{M}}$ does not self-intersect, $f$ is an embedding. If it self-intersects it is an immersion.
 
-### Example: Isometric embedding
-For the Riemannian Manifold $\big(\text{open unit disc}, g_{\text{hemisphere}}\big)$, by construction of $g_{\text{hemisphere}}$ from the hemisphere, $\text{disc\_to\_hemisphere}(\cdot)$ is an isometric embedding. 
+## Definition: Isometric Immersions and Embeddings, Ambient Space
+An isometric immersion of a Riemannian 2-Manifold $\big(\mathcal{M}, g\big)$ into a 2-dimensional submanifold $\hat{\mathcal{M}} \in \reals^3$ is a map $f: \mathcal{M} \to \hat{\mathcal{M}}$ such that the distance between any two points in $\mathcal{M}$ under $g$ is the same as the distance between their images under $f$ measured along the surface of in $\reals^3$. If $f$ is additionally a bijection, meaning that $\hat{\mathcal{M}}$ does not self-intersect, $f$ is an embedding. If it self-intersects it is an immersion. The space that the manifold is mapped into is referred to as the ambient space. Throughout this thesis, where applicable, the ambient space is $\reals^3$.
+
+## Example: Isometric embedding
+For the Riemannian Manifold $\big(\text{open unit disc}, g_{\text{hemisphere}}\big)$, by construction of $g_{\text{hemisphere}}$ from the hemisphere, $\text{disc-to-hemisphere}(\cdot)$ is an isometric embedding. 
 We will later cover an example of a 2-manifold that cannot be isometrically embedded in $\reals^3$.
 
+## Definition: Intrinsic and Extrinsic Properties
+
+Properties of Manifolds can be grouped into two categories. Extrinsic properties require the manifold to be viewed as part of the ambient space. An example is the normal vector, which by definition is orthogonal to the tangent space at each point. 
+
+Intrinsic properties are independent of any embedding and arise solely from the manifold's internal structure. These include path lengths and angles.
+
+## Representing Manifolds on a Computer
+
+We consider two representations of Riemannian 2-Manifolds: Manifolds given by a local coordinate system and a metric (intrinsic representation), or Manifolds represented as triangle meshes (extrinsic representation).
+
+### Extrinsic Representation
+When given a triangle mesh and no metric tensor, one can only assume that 
+![hey](../globe_projection.png)
+
+### Intrinsic Representation
+
+## Triangulations of Manifolds
+A computer works with discrete objects. The 
+
+## Simplicial Complex
 
 
-
-
-
-### Triangulations of Manifolds
-
-### Simplicial Complex
-
-### Edge lengths
-
-### Intrinsic and Extrinsic Properties
-
-In this thesis, we consider two representations of Riemannian 2-Manifolds

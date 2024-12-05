@@ -24,3 +24,8 @@ $\Delta$ is used to denote the Laplace operator, $\Delta = \text{div}(\nabla) = 
 The Laplace-Beltrami operator $\Delta_g$ is the generalisation of the Laplace operator to riemannian manifolds. The explicit form is
 
 $$\Delta_g f (x) = \frac{1}{\sqrt{|\text{det}(g(x))|}} \sum_{i=1}^n \frac{\partial}{\partial x_i}\Big(\sqrt{|\text{det}(g(x))|} g(x)^{-1} \nabla f(x)\Big)$$
+
+# Notation
+In this work, the Laplacian operator $\Delta$ is understood to act only on the spatial coordinates x. We use $\Delta$ both for the euclidean laplacian and for the Laplace-Beltrami operator
+
+Capital variable names denote random variables, their lowercase variant deterministic, known values.
