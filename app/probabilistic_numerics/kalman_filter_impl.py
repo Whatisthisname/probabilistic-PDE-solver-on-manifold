@@ -263,6 +263,9 @@ def solve_nonlinear_IVP(
         SDE_coef, SDE_noise, delta_time
     )
 
+    print("hi")
+    print(Q)
+
     if rank := jnp.linalg.matrix_rank(Q) < n_state * (1 + q):
         print(
             "WARNING: Rank of Q is",

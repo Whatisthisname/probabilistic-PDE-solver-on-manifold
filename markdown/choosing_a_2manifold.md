@@ -1,26 +1,66 @@
 # Riemannian Manifolds and Differential Geometry
 
-## Context and Motivation:
+This section covers relevant knowledge of Riemannian Manifold by motivating and explaining key concepts through definitions and examples. It is intended to give intuition and working knowledge.
+### Coordinate Chart
 
-For millenia society thought that earth was a flat plane, because that's what it looks like up close. In the same sense, the surface of a unit-ball, called the unit-sphere, looks locally like a section of $\reals^2$. 
-This is the essence of all Riemannian 2-manifolds - each point is locally homeomorphic to $\reals^2$.
+For millenia society thought that earth was a flat disc, because that's what it looks like up close. This is becayse the surface of a unit-ball, the unit-sphere, looks locally flat. Mathematically, we say that each point is locally homeomorphic to $\reals^2$.
 
-The 2-dimensional manifold most readers will be most familiar with is $\reals^2$. It is a vector space, meaning that linear combinations of the basis-vectors $e_1$ and $e_2$ are still members of $\reals^2$. In a vector space we can additionally define a norm and an inner product. The Euclidean norm is defined as $||(x,y)||_2 = \sqrt{x^2 + y^2}$ and is used to define the distance $d(\vec{a}, \vec{b}) = ||\vec{a}-\vec{b}||_2$. The Euclidean inner product $\langle \vec{a},\vec{b} \rangle = a_xb_x +a_yb_y$ relates to the angle $\theta$ (radians) between vectors through $\frac{\langle \vec{a},\vec{b} \rangle}{||\vec{a}||||\vec{b}||} = \cos(\theta)$. 
+Although the surface of the earth is 3-dimensional, we humans have found a way to parametrize it in terms of just two numbers, latitude and longitude. This is known as a local representation. The most common representation is the Mercator projection, which is an explicit way to assign meaning to these local coordinates. 
+
+---
+#### Definition: Coordinate Chart
+The 2D coordinate chart is a diffeomorphism that maps open subset of a 2-manifold $\mathcal{M}$ to an open subset in the Euclidean plane $\mathcal{C} \subseteq \reals^2$. 
+
+---
+
+---
+#### Example: Coordinate Chart
+We will use the surface of the earth as $\mathcal{M}$ and consruct a coordinate chart. We will map the open upper hemisphere $\subset \mathcal{M}$ to the open unit-disc $\mathcal{C}$ by projecting onto the unique plane that cuts through the equator. 
+
+A bijection from the 2D-unit-disc to the half-sphere is given by $$\text{disc\_to\_hemisphere}(\begin{bmatrix}x & y\end{bmatrix}^\intercal) = \begin{bmatrix}x & y & \sqrt{1 - x^2 - y^2}\end{bmatrix}^\intercal $$ The inverse of this map corresponds to projecting the hemisphere onto the equatorial plane.
+[PICTURE OF UNIT DISC AND DOME WITH ARROW MAPPING THEM].
+
+If we carry over the positions of the landmasses with the projection, we end up with our map that is centered around the geographic north pole. [FIGURE WITH EQUIDISTANT LONGITUDAL LINES]. As can be seen, the longitudal lines get compressed towards the edge.
+
+---
+
+### Metric Tensor
+
+Good maps are characterized by being amenable to direct measurements. A 'deficit' of the Mercator projection, that is often pointed out is that the landmasses at the poles, (say, Greenland), are disproportionately big when compared to countries at the equator, (say, Kenya). This difference in scale invalidates direct measurements of lengths using a conventional ruler. The Metric Tensor quantifies the distortions induced by the map, and is a vital tool for measurements on coordinate charts.
+
+Before giving a definition, we will further motivate the Metric Tensor by pointing out what one takes for granted in Euclidean space (specifically, $\reals^2$). $\reals^2$ is a vector space, meaning that linear combinations of the basis-vectors $e_1$ and $e_2$ are still members of $\reals^2$. In a vector space we can additionally define a norm and an inner product. The Euclidean norm is defined as $||(x,y)||_2 = \sqrt{x^2 + y^2}$ and is used to define the distance $d(\vec{a}, \vec{b}) = ||\vec{a}-\vec{b}||_2$. The Euclidean inner product $\langle \vec{a},\vec{b} \rangle = a_1b_1 +a_2b_2$ relates to the angle $\theta$ (radians) between vectors through $\frac{\langle \vec{a},\vec{b} \rangle}{||\vec{a}||||\vec{b}||} = \cos(\theta)$. As we can see, measuring distances and angles is relatively straightforward here.
 
 ---
 ### FOOTNOTE: 🦶
-$\reals^2$ is technically the set of all ordered pairs of real numbers, but in the context of differential geometry, it is also the Euclidean space.
+$\reals^2$ is technically the set of all ordered pairs of real numbers, but in the context of differential geometry, it is also the Euclidean plane.
 
 ---
 
-Conversely, a Riemannian manifold is not a vector space. This means there is no global set of basis vectors, and in fact, there is not even a notion of linear combinations of these. The unit-sphere will illustrate this well. The properties of the sphere are most intuitively understood when the sphere is represented as a subset of $\reals^3$ centered at $(0,0,0)$. With this representation, called an embedding of the sphere, we can represent the sphere as all points $\vec{p}$ satisfying $||p||_2 = 1$. We can not however add or scale any of these points - it would in general take us away from the sphere. There is something inelegant about using 3 coordinates and a norm-constraint to represent a 2-dimensional surface, and even though they give us a set of coordinates, we still don't get distances or angles, because we don't have the inner product or norm. This is what the aptly named coordinate chart and metric tensor allow us to do.
+Conversely, the surface of the earth is not a vector space. There can be no set of basis vectors, because there is no defined notion of addition or scaling of coordinates (we do not add pairs ($lat$., $long$.), and we do not scale them). Even though we have coordinates, we still don't get distances or angles, because we don't have the inner product or norm. This is the problem the metric tensor solves. 
 
-### Coordinate Chart
+---
+#### Definition: Metric Tensor
 
-Although the surface of the earth is 3-dimensional, humans have found a way to parametrize it in terms of two numbers, latitude and longitude, and use the Mercator projection to translate these values. However, as the projection is often mocked for, countries such as Greenland and the two poles seem a lot bigger than they actually are when compared to countries at the Equator like Kenia.
+A 2D metric tensor is a symmetric, positive-definite 2×2 matrix $g$ defined at a point of a two-dimensional surface in specified in local coordinates. It provides a way to measure lengths, angles, and areas by describing how the infinitesimal distance $ds$ of a local offset in tangent space $\begin{bmatrix} dx & dy\end{bmatrix}^\intercal$ is computed as:
 
-The coordinate chart is a diffeomorphism that maps open subset of the 2-manifold to an open subset in the Euclidean plane, such as $(-1, 1)\times(-1, 1)$. Using again the surface of the earth, we can make a coordinate chart of the upper half-dome excluding the equator by projecting onto the plane that cuts through the equator
+$$ds^2 = g_{11}dx^2 + 2g_{12}dxdy + 2g_{22}dy^2 = \begin{bmatrix} dx & dy\end{bmatrix} \begin{bmatrix} dx \\ dy\end{bmatrix} $$
 
+---
+#### Example: Metric Tensor
+
+$ds$ and $dx$ and $dy$ have the same meaning as the $dx$ in $\int_0^1 f(x) \;dx$. Intuitively, if we were to relate the integral back to the Riemann sum, $dx$ is the size of the interval in our partition of $[0, 1] \subset \reals$. By having $dx$ depend on the local coordinates
+
+Positive-definiteness in the definition ensures that all squared infinitesimal distances $ds^2$ will remain positive, no matter the entries in $g$. $g$ can be thought of as encoding a local version of the pythagorean theorem. If $g = \begin{bmatrix} 1 & 0 \\ 0 & 1\end{bmatrix}$, then the formula for infinitesimal distance reduces to $$ds^2 = dx^2 + dy^2$$ which looks very similar to $c^2 = a^2 + b^2$. 
+
+If we have $g = \begin{bmatrix} \xi^2 & 0 \\ 0 & 0\end{bmatrix}$, we get $$ds^2=\xi^2dx^2 \iff ds = \xi dx$$ which states that the distance between two points
+
+---
+
+#### Definition: Riemannian Metric
+
+A 2D Riemannian metric is a mathematical function that defines the infinitesimal distance on a two-dimensional surface. It assigns to each point a symmetric, positive-definite bilinear form that determines how lengths, angles, and areas are measured locally.
+
+#### Example: Riemannian Metric
 ---
 ### FOOTNOTE: 🦶
 A diffeomorphism is a bijection between two differentiable manifolds such that both it and its inverse are differentiable.
@@ -32,10 +72,8 @@ A diffeomorphism is a bijection between two differentiable manifolds such that b
 
 Not all interesting spaces are vector spaces, consider the sphere.
         - Consider problems on the surface of the earth. How would a wave travel through some material? What places will be reached at the same time? What strength will the wave have when it hits this place?
-## What is a riemannian manifold?
 
-Charts
-Metric Tensor
+
 Tissot Indicatrix
 
 
