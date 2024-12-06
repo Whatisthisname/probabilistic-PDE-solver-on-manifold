@@ -5,7 +5,7 @@ from discrete_exterior_calculus import DEC
 from icosphere import icosphere
 from jax import config
 import numpy as np
-from probabilistic_numerics import heat_kalman
+from probabilistic_numerics import kalman_filter
 
 config.update("jax_enable_x64", True)
 
@@ -114,7 +114,7 @@ def solve(
     update_indicator = update_indicator.at[0].set(False)
     # update_indicator = update_indicator.at[timesteps // 2 :].set(False)
 
-    _samples, kalman_sol, u_std = heat_kalman.solve_nonlinear_IVP(
+    _samples, kalman_sol, u_std = kalman_filter.solve_nonlinear_IVP(
         prior_matrix=mesh.laplace_matrix,
         initial_mean=initial_value,
         derivatives=derivatives,
