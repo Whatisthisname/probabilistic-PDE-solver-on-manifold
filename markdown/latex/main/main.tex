@@ -1,0 +1,38 @@
+\input{../header.txt}
+\def\COMPILINGFROMMAIN{}
+\begin{document}
+
+\title{Two-Column Layout Example}
+\author{Theo Computer Scientist}
+\date{\today}
+\maketitle
+
+\begin{abstract}
+In this thesis we discuss details of implementing a probabilistic numerical solver for partial differential equations whose spatial domain is not a vector space. We cover topics including the concept of the metric tensor, embeddings of manifolds, mesh representations and refinement, discrete differential operators, ODEs, PDEs, and SDEs, numerical linear algebra, state space models, the (extended) Kálmán-filter and -smoother, and numerical stability. We conclude with experiments that test the efficiency of physically informed prior solutions in non-euclidean domains.
+
+We have structured the thesis as a guide on how to implement and follow the results, and we try to motivate the steps to the best of our efforts.
+\end{abstract}
+
+\section{Overview}
+\input{../summary/summary.tex}
+
+\section{Riemannian Manifolds}
+\input{../geometry/geometry.tex}
+
+\section{Results}
+Use the \texttt{figure*} or \texttt{table*} environments for figures or tables spanning both columns.
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../images/smiley.png}
+    \caption{A wide figure spanning both columns.}
+    \label{fig:wide_figure}
+\end{figure*}
+
+\section{Conclusion}
+This concludes the example.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,23 @@
+%%%%HEADER
+\documentclass[11pt, twocolumn]{article}
+\usepackage[a4paper, margin=1in, columnsep=20pt]{geometry}
+\usepackage{amsmath, amssymb, graphicx, hyperref, natbib, tcolorbox}
+
+\def\reals{\mathbb{R}}
+% Define the custom definition box and command
+\newtcolorbox{mydefinition}[2][]{%
+    colback=gray!10, % Background color (light gray)
+    colframe=black,  % Border color
+    coltitle=black,  % Title color
+    fonttitle=\bfseries, % Title font style
+    sharp corners,   % Box style
+    % enhanced,
+    title=#1         % Title passed as the first argument
+}
+
+\newcommand{\definition}[2]{%
+    \begin{mydefinition}[#1]
+    #2
+    \end{mydefinition}
+}
+%%%%HEADER
