@@ -37,7 +37,7 @@ experiment_setup["heat and tanh"] = {
     "problem_title": "∂u/∂t = -Δu -tanh(Δu)",
     "dbname": "heat_and_tanh",
     "priors": ["heat", "iwp"],
-    "derivatives": [1, 2],
+    "derivatives": [1, 2, 3, 4],
     "timesteps": [
         30,
         50,

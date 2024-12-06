@@ -68,51 +68,41 @@ def solve(
         def f(u):
             return mesh.laplace_matrix @ u + jnp.tanh(mesh.laplace_matrix @ u)
 
-    if problem in second_order_problems:
+    initial_value = jnp.zeros(n * (q + 1))
+    initial_value = initial_value.at[ymost_point].set(2.0)
+    initial_value = initial_value.at[yleast_point].set(-2.0)
 
-        def non_linear_observation_function(state, time, step):
-            return (f(E_0 @ state)) - E_2 @ state
+    from probdiffeq.taylor import odejet_padded_scan
 
     if problem in first_order_problems:
 
         def non_linear_observation_function(state, time, step):
             return (f(E_0 @ state)) - E_1 @ state
 
-    initial_value = np.zeros(n * (q + 1))
-    initial_value[ymost_point] = 2.0
-    initial_value[yleast_point] = -2.0
+        def vf(y):
+            return f(y[:n])
 
-    if True:
-        if problem in first_order_problems:
-            if q >= 1:
-                initial_value[n : 2 * n] = f(initial_value[:n])
-            if q >= 2:
-                J_f = jax.jacfwd(f)(initial_value[:n])
-                initial_value[2 * n : 3 * n] = J_f @ f(initial_value[:n])
-            if q >= 3:
-                H_f = jax.jacfwd(jax.jacfwd(f))(initial_value[:n])
-                first_term = jnp.tensordot(H_f, f(initial_value[:n]), axes=1) @ f(
-                    initial_value[:n]
-                )
-                second_term = J_f @ (J_f @ f(initial_value[:n]))
-                initial_value[3 * n : 4 * n] = first_term + second_term
-            if q >= 4:
-                raise AssertionError("q >= 4 not supported, numerically unstable")
-        if problem in second_order_problems:
-            if q >= 2:
-                initial_value[2 * n : 3 * n] = f(initial_value[:n])
-            if q >= 3:
-                J_f = jax.jacfwd(f)(initial_value[:n])
-                initial_value[3 * n : 4 * n] = J_f @ f(initial_value[:n])
-            if q >= 4:
-                raise AssertionError("q >= 4 not supported, numerically unstable")
+        tcoeffs = odejet_padded_scan(vf, (initial_value[:n],), num=q)
+        initial_value = jnp.array(tcoeffs)[:, :n].flatten()
+
+    if problem in second_order_problems:
+
+        def non_linear_observation_function(state, time, step):
+            return (f(E_0 @ state)) - E_2 @ state
+
+        def vf(y):
+            du_dt = y[n : n * 2]
+            dv_dt = f(y[:n])
+            return jnp.concatenate([du_dt, dv_dt])
+
+        tcoeffs = odejet_padded_scan(vf, (initial_value[: 2 * n],), num=q)
+        initial_value = jnp.array(tcoeffs)[:, :n].flatten()
 
     delta_time = end_time / timesteps
     solution_times = jnp.linspace(0, end_time, timesteps, endpoint=False)
 
     update_indicator = jnp.ones(timesteps, dtype=bool)
     update_indicator = update_indicator.at[0].set(False)
-    # update_indicator = update_indicator.at[timesteps // 2 :].set(False)
 
     _samples, kalman_sol, u_std = kalman_filter.solve_nonlinear_IVP(
         prior_matrix=mesh.laplace_matrix,
