@@ -65,7 +65,7 @@ class Mesh:
         self.star0 = self.compute_star0()
         self.star1_circ = self.compute_star1_circ()
         self.star1_bary = self.compute_star1_bary()
-        self.laplace_matrix = -spsla.spsolve(
+        self.laplace_matrix = spsla.spsolve(
             self.star0, self.d0.T @ self.star1_circ @ self.d0
         )
 

@@ -12,17 +12,20 @@ config.update("jax_enable_x64", True)
 end_time = 10
 return_times = jnp.linspace(0, end_time, 100)
 
-first_order_problems = ["heat", "heat and tanh", "heat small tanh"]
+first_order_problems = ["heat", "heat and tanh", "heat small tanh", "heat and tanh u"]
 second_order_problems = ["wave", "wave and tanh"]
 
 
 def solve(
     isosphere_nu: int,
-    timesteps: int,
+    n_solution_points: int,
     derivatives: int,
-    prior: Literal["heat", "wave", "iwp"],
-    problem: str,
+    prior_type: Literal["heat", "wave", "iwp"],
+    prior_scale: float,
+    vector_field: callable,
+    order: int,
 ):
+    assert derivatives >= order
     # nu:       1   2   3   4    5    6    7    8    9    10
     # vertices: 12, 42, 92, 162, 252, 362, 492, 642, 812, 1002
     vertices, faces = icosphere(nu=isosphere_nu)
@@ -36,83 +39,77 @@ def solve(
 
     O = jnp.zeros((n, n))
     I = jnp.eye(n)
-
     E_0 = jnp.block([I] + [O] * q)
-    E_1 = jnp.block([O] * 1 + [I] + [O] * (q - 1))
-    E_2 = jnp.block([O] * 2 + [I] + [O] * (q - 2))
-    E_3 = jnp.block([O] * 3 + [I] + [O] * (q - 3))
-    E_4 = jnp.block([O] * 4 + [I] + [O] * (q - 4))
-
-    if problem == "heat and tanh":
-
-        def f(u):
-            return jnp.tanh(mesh.laplace_matrix @ u) + mesh.laplace_matrix @ u
-
-    if problem == "heat small tanh":
-
-        def f(u):
-            return 0.1 * jnp.tanh(mesh.laplace_matrix @ u) + mesh.laplace_matrix @ u
-
-    if problem == "heat":
-
-        def f(u):
-            return mesh.laplace_matrix @ u
-
-    if problem == "wave":
-
-        def f(u):
-            return mesh.laplace_matrix @ u
-
-    if problem == "wave and tanh":
-
-        def f(u):
-            return mesh.laplace_matrix @ u + jnp.tanh(mesh.laplace_matrix @ u)
+    E_1 = jnp.block([O] + [I] + [O] * (q - 1))
+    E_2 = jnp.block([O, O] + [I] + [O] * (q - 2))
 
     initial_value = jnp.zeros(n * (q + 1))
-    initial_value = initial_value.at[ymost_point].set(2.0)
-    initial_value = initial_value.at[yleast_point].set(-2.0)
+    initial_value = initial_value.at[ymost_point].set(1.0)
+    initial_value = initial_value.at[yleast_point].set(-1.0)
 
     from probdiffeq.taylor import odejet_padded_scan
 
-    if problem in first_order_problems:
+    if order == 1:
 
         def non_linear_observation_function(state, time, step):
-            return (f(E_0 @ state)) - E_1 @ state
+            return vector_field(E_0 @ state, mesh.laplace_matrix) - E_1 @ state
 
-        def vf(y):
-            return f(y[:n])
+        def taylor_vector_field(y):
+            return vector_field(y, mesh.laplace_matrix)
 
-        tcoeffs = odejet_padded_scan(vf, (initial_value[:n],), num=q)
-        initial_value = jnp.array(tcoeffs)[:, :n].flatten()
+        tcoeffs = odejet_padded_scan(taylor_vector_field, (E_0 @ initial_value,), num=q)
+        del taylor_vector_field
 
-    if problem in second_order_problems:
+        initial_value = jnp.array(tcoeffs).flatten()
+        initial_cov_diag = jnp.zeros_like(initial_value)
+
+    if order == 2:
 
         def non_linear_observation_function(state, time, step):
-            return (f(E_0 @ state)) - E_2 @ state
+            return (
+                vector_field(E_0 @ state, E_1 @ state, mesh.laplace_matrix)
+                - E_2 @ state
+            )
 
-        def vf(y):
-            du_dt = y[n : n * 2]
-            dv_dt = f(y[:n])
-            return jnp.concatenate([du_dt, dv_dt])
+        def taylor_vector_field(y, dy):
+            return vector_field(y, dy, mesh.laplace_matrix)
 
-        tcoeffs = odejet_padded_scan(vf, (initial_value[: 2 * n],), num=q)
-        initial_value = jnp.array(tcoeffs)[:, :n].flatten()
+        tcoeffs = odejet_padded_scan(
+            taylor_vector_field,
+            (E_0 @ initial_value, E_1 @ initial_value),
+            num=q - 1,
+        )
+        del taylor_vector_field
 
-    delta_time = end_time / timesteps
-    solution_times = jnp.linspace(0, end_time, timesteps, endpoint=False)
+        initial_value = jnp.array(tcoeffs).flatten()
+        initial_cov_diag = jnp.zeros_like(initial_value)
 
-    update_indicator = jnp.ones(timesteps, dtype=bool)
-    update_indicator = update_indicator.at[0].set(False)
+    delta_time = end_time / (n_solution_points - 1)  # -1 because we start at 0
+    solution_times = jnp.linspace(0, end_time, n_solution_points, endpoint=True)
+
+    # print("now")
+    # print(non_linear_observation_function(initial_value, 0, 0))
+    # print(initial_value)
+    # print(initial_cov_diag)
+
+    # initial_value = jnp.zeros_like(initial_value)
+    # initial_cov_diag = jnp.zeros_like(initial_cov_diag)
+
+    # def non_linear_observation_function(state, time, step):
+    #     return E_0 @ state - E_1 @ state
+
+    # print(non_linear_observation_function(initial_value, 0, 0))
 
     _samples, kalman_sol, u_std = kalman_filter.solve_nonlinear_IVP(
-        prior_matrix=mesh.laplace_matrix,
+        prior_matrix=-mesh.laplace_matrix * prior_scale,
         initial_mean=initial_value,
-        derivatives=derivatives,
-        timesteps=timesteps,
+        initial_cov_diag=initial_cov_diag,
+        derivatives=q,
+        n_solution_points=n_solution_points,
         delta_time=delta_time,
-        prior=prior,
+        prior_type=prior_type,
         observation_function=non_linear_observation_function,
-        update_indicator=update_indicator,
+        update_indicator=jnp.ones(n_solution_points, dtype=bool),
         observation_uncertainty=jnp.zeros((n, n)),
         n_samples=0,
     )

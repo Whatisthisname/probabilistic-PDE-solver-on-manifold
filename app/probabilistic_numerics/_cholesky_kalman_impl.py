@@ -185,7 +185,7 @@ def jax_batch_filter(
     )
 
 
-@partial(jax.jit, static_argnames=("observation_function", "timesteps"))
+# don't JIT this
 def jax_batch_extended_filter(
     prior_mean,
     prior_cholvariance,
@@ -225,16 +225,9 @@ def jax_batch_extended_filter(
     def loop(carry: Carry, input):
         time, step, update = input
 
-        filtered_state, gamma = jax.lax.cond(
-            update,
-            integrate_observation,  # <- if true
-            lambda prior, time, step: (prior, 0.0),  # <- if false
-            *(carry.prior, time, step),
-        )
-
         state_state_dist = chol_marginal_and_reverse(
-            filtered_state.mean,
-            filtered_state.chol_cov,
+            carry.prior.mean,
+            carry.prior.chol_cov,
             A_cond_state,
             b_cond_state,
             Ch_cond_state,
@@ -244,8 +237,15 @@ def jax_batch_extended_filter(
             mean=state_state_dist.m_out, chol_cov=state_state_dist.Ch_out
         )
 
+        filtered_state, gamma = jax.lax.cond(
+            update,
+            integrate_observation,  # <- if true
+            lambda state, time, step: (state, 0.0),  # <- if false
+            *(predicted_next_state, time, step),
+        )
+
         carry = Carry(
-            prior=predicted_next_state,
+            prior=filtered_state,
             output_noise_scale_acc=carry.output_noise_scale_acc + gamma,
         )
         state = (
@@ -271,11 +271,9 @@ def jax_batch_extended_filter(
         ),
     )
 
-    gamma = jnp.sqrt(carry.output_noise_scale_acc / (jnp.sum(update_indicator) + 2))
+    gamma = jnp.sqrt(carry.output_noise_scale_acc / (jnp.sum(update_indicator) + 1))
 
     filtered_states: CholGauss
-    # filtered_states.chol_cov.at[:].multiply(gamma)
-    # reverse_parameters.Ch_rev_list.at[:].multiply(gamma)
 
     scaled_filtered_states = CholGauss(
         mean=filtered_states.mean, chol_cov=filtered_states.chol_cov * gamma

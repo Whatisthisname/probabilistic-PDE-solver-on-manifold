@@ -36,14 +36,15 @@ def solve_nonlinear_IVP(
     *,
     prior_matrix: jnp.array,
     initial_mean: jnp.array,
-    derivatives: int = 2,
-    timesteps: int = 100,
-    delta_time: float = 0.1,
-    prior: Literal["iwp", "heat", "wave"],
+    initial_cov_diag: jnp.array,
+    derivatives: int,
+    n_solution_points: int,
+    delta_time: float,
+    prior_type: Literal["iwp", "heat", "wave"],
     observation_function,
     observation_uncertainty: jnp.array,
     update_indicator,
-    n_samples: int = 0,
+    n_samples: int,
 ):
     q = derivatives
     state_size = len(initial_mean) // (q + 1)
@@ -52,18 +53,18 @@ def solve_nonlinear_IVP(
         size=state_size, derivatives=q
     )
 
-    if prior == "heat":  # place prior matrix in bottom right
+    if prior_type == "heat":  # place prior matrix in bottom right
         SDE_coef = SDE_coef.at[-state_size:, -state_size:].set(prior_matrix)
-    elif prior == "wave":  # place prior matrix in left of bottom right
+    elif prior_type == "wave":  # place prior matrix in left of bottom right
         SDE_coef = SDE_coef.at[-state_size:, -2 * state_size : -state_size].set(
             prior_matrix
         )
 
-    taylor_add_h = get_taylor_add_h(delta_time, state_size, q)
-    taylor_remove_h = get_taylor_remove_h(delta_time, state_size, q)
+    unprecondition_matrix = get_taylor_add_h(delta_time, state_size, q)
+    precondition_matrix = get_taylor_remove_h(delta_time, state_size, q)
 
-    SDE_coef = taylor_remove_h @ SDE_coef @ taylor_add_h
-    SDE_noise = taylor_remove_h @ SDE_noise
+    SDE_coef = precondition_matrix @ SDE_coef @ unprecondition_matrix
+    SDE_noise = precondition_matrix @ SDE_noise
 
     A, Q = IWPprior.perform_matrix_fraction_decomposition(
         SDE_coef, SDE_noise, delta_time
@@ -86,17 +87,17 @@ def solve_nonlinear_IVP(
         observation_uncertainty_chol = jnp.linalg.cholesky(observation_uncertainty)
 
     filtered, reverse_parameters = cholk.jax_batch_extended_filter(
-        prior_mean=taylor_remove_h @ initial_mean,
-        prior_cholvariance=jnp.zeros((state_size * (q + 1), state_size * (q + 1))),
+        prior_mean=precondition_matrix @ initial_mean,
+        prior_cholvariance=jnp.diag(jnp.sqrt(initial_cov_diag)),
         observation_function=lambda state, time, step: observation_function(
-            taylor_add_h @ state, time, step
+            unprecondition_matrix @ state, time, step
         ),
         Ch_cond_obs=observation_uncertainty_chol,
         A_cond_state=A,
         b_cond_state=jnp.zeros(state_size * (1 + q)),
         Ch_cond_state=jnp.linalg.cholesky(Q),
         update_indicator=update_indicator,
-        timesteps=timesteps,
+        timesteps=n_solution_points,
         delta_time=delta_time,
     )
 
@@ -118,7 +119,7 @@ def solve_nonlinear_IVP(
     # for each time step, we have a state vector of size grid * (1 + q).
     # The taylor transform is (grid * (1 + q)) x (grid * (1 + q)).
     # we want to apply the taylor transform to each time step:
-    transformed_samples = jnp.einsum("tiq,kq->tik", samples, taylor_add_h)
-    transformed_mean = jnp.einsum("ij,kj->ki", taylor_add_h, smooth_means)
-    transformed_std = jnp.einsum("ij,kj->ki", taylor_add_h, stds)
+    transformed_samples = jnp.einsum("tiq,kq->tik", samples, unprecondition_matrix)
+    transformed_mean = jnp.einsum("ij,kj->ki", unprecondition_matrix, smooth_means)
+    transformed_std = jnp.einsum("ij,kj->ki", unprecondition_matrix, stds)
     return transformed_samples, transformed_mean, transformed_std

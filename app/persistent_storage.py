@@ -1,4 +1,5 @@
 import shelve
+import jax.numpy as jnp
 
 
 def set_value(key, value, filename="mydata.db"):
@@ -32,134 +33,29 @@ def build_experiment_name(prior, derivatives, timesteps):
     return f"{prior}_{derivatives}_{timesteps}"
 
 
+def tan(x):
+    return jnp.sin(x) / jnp.cos(x)
+
+
+# choice = "heat and square"
+choice = "wave and tan"
+
 experiment_setup = dict()
-experiment_setup["heat and tanh"] = {
-    "problem_title": "∂u/∂t = -Δu -tanh(Δu)",
-    "dbname": "heat_and_tanh",
+experiment_setup["heat and square"] = {
+    "problem_title": "∂u/∂t = -Δu -u²",
     "priors": ["heat", "iwp"],
+    "prior_scale": [2],
     "derivatives": [1, 2, 3, 4],
-    "timesteps": [
-        30,
-        50,
-        75,
-        100,
-        200,
-        300,
-        400,
-        600,
-        800,
-        1000,
-        1200,
-        1600,
-        2000,
-        2400,
-        2800,
-        3200,
-        3600,
-        4000,
-    ][:10],
+    "timesteps": jnp.logspace(1, 3.5, 10, endpoint=True, base=10).astype(int),
+    "vector_field": lambda u, laplace: -laplace @ u - u**2,
+    "order": 1,
 }
-experiment_setup["heat small tanh"] = {
-    "problem_title": "∂u/∂t = -Δu -0.1*tanh(Δu)",
-    "dbname": "heat_small_tanh",
-    "priors": ["heat", "iwp"],
-    "derivatives": [1, 2],
-    "timesteps": [
-        30,
-        50,
-        75,
-        100,
-        200,
-        300,
-        400,
-        600,
-        800,
-        1000,
-        1200,
-        1600,
-        2000,
-        2400,
-        2800,
-        3200,
-        3600,
-        4000,
-    ],
-}
-experiment_setup["heat"] = {
-    "problem_title": "∂u/∂t = -Δu",
-    "dbname": "heat",
-    "priors": ["heat", "iwp"],
-    "derivatives": [1, 2],
-    "timesteps": [
-        30,
-        50,
-        75,
-        100,
-        200,
-        300,
-        400,
-        600,
-        800,
-        1000,
-        1200,
-        1600,
-        2000,
-        2400,
-        2800,
-        3200,
-        3600,
-        4000,
-    ],
-}
-experiment_setup["wave"] = {
-    "problem_title": "∂²u/∂t² = -Δu",
-    "dbname": "wave",
+experiment_setup["wave and tan"] = {
+    "problem_title": "∂²u/∂t² = -Δu -tan(u)",
     "priors": ["wave", "iwp"],
-    "derivatives": [2],
-    "timesteps": [
-        30,
-        50,
-        75,
-        100,
-        200,
-        300,
-        400,
-        600,
-        800,
-        1000,
-        1200,
-        1600,
-        2000,
-        2400,
-        2800,
-        3200,
-        3600,
-        4000,
-    ],
-}
-experiment_setup["wave and tanh"] = {
-    "problem_title": "∂²u/∂t² = -Δu - tanh(Δu)",
-    "dbname": "wave_and_tanh",
-    "priors": ["wave", "iwp"],
-    "derivatives": [2],
-    "timesteps": [
-        30,
-        50,
-        75,
-        100,
-        200,
-        300,
-        400,
-        600,
-        800,
-        1000,
-        1200,
-        1600,
-        2000,
-        2400,
-        2800,
-        3200,
-        3600,
-        4000,
-    ],
+    "prior_scale": [2.5],
+    "derivatives": [2, 3, 4],
+    "timesteps": jnp.logspace(1, 3.5, 10, endpoint=True, base=10).astype(int),
+    "vector_field": lambda u, du, laplace: -(laplace @ u) - tan(u),
+    "order": 2,
 }
