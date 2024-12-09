@@ -4,12 +4,10 @@
     \begin{document}
 \fi
 
-\noindent
-% # Building a probabilistic numerical solver on a 2-manifold
 On a very high level, these are the steps necessary to build a probabilistic numerical solver on a 2-manifold. Each section will be explained in more detail in the following chapters.
 
-\subsection*{Discretize the 2-Manifold to a Triangle Mesh}
-In chapter \ref{sec:manifolds}, we start off with a Riemannian 2-manifold $\mathcal{M}$, represented either through a metric tensor and coordinate chart, or through an already discretized representation as a triangle mesh. This representation leads to well understood formulas for the Laplacian operator, the cotan-Laplacian. Basic necessary concepts of differential geometry are covered.
+\subsection*{Discretize the 2-Manifold to a Triangle Mesh, build a finite-differences matrix $L$}
+In chapter \ref{sec:manifolds}, we start off with a Riemannian 2-manifold $\mathcal{M}$, represented either through a metric tensor and coordinate chart, or through an already discretized representation as a triangle mesh. With our manifold triangle mesh,  we then resort to the tools of discrete exterior calculus to compute the cotan-Laplacian $L$ which approximates the Laplacian operator on the manifold. Basic necessary concepts of all will be covered.
 \subsection*{Discretize the PDE to a System of ODEs}
 Chapter \ref{sec:pde} assumes that we have a time-evolving PDE such as the heat equation $$\frac{\partial}{\partial t}u(t,\mathbf{x}) = -\Delta u(t,\mathbf{x})$$ We choose a timespan in which the PDE is to be simulated, $\mathcal{T} = [0, T]$, an initial condition $u(\mathbf{x}, 0)$ and potentially boundary conditions for all times $t\in \mathcal{T}$. We convert the PDE into a system of ODEs by discretizing the spatial domain into finite sets of points $V$. We denote the spatial restriction as $$u_V(t) := \left . u(x,t)\right|_{x=V} \in \reals^{|V|}$$ The discretized domain will require the cotan-Laplacian $L \in \reals^{|V|\times |V|}$. Depending on the representation of the manifold, there are different ways to compute it.  If a metric tensor and coordinate chart are provided, compute and intrinsic triangulation of the domain from points $V$. If just a mesh with vertices $V$ is provided, assume it is an isometric immersion. As an example, with $L$, the linear heat equation then becomes $$\frac{\text{d}}{\text{d} t}u_V(t) = -Lu_V(t)$$ which is now a system of ODEs, because there are no partial derivatives. Basic PDE and ODE theory is covered.
 \subsection*{Define a Prior Distribution}

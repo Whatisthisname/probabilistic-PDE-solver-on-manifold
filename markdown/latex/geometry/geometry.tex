@@ -3,7 +3,6 @@
     \input{../header.tex}
     \begin{document}
 \fi
-
 This section covers relevant knowledge of Riemannian 2-Manifolds by motivating and explaining key concepts through definitions and examples. We will study results and give intuition and working knowledge relating to later applications and algorithms. The definitions will stick to 2-manifolds, but the definitions and ideas will carry into higher (or lower) dimensions with the same principles. 
 
 \section*{Riemannian 2-Manifolds}
@@ -21,19 +20,22 @@ Although the surface of the earth lies in our physical 3-dimensional space, we h
     A 2D coordinate chart of $\mathcal{M}$ is a pair $(C, f)$, where $f$ is a diffeomorphism\footnote{A diffeomorphism is a bijection between two differentiable manifolds such that both it and its inverse are continuous. Strictly speaking, a homeomorphism is enough here (meaning not necessarily differentiable), but since we are ultimately interested in doing calculus on our manifold, we need a differentiable representation of it.} $$f: U \to C$$ that maps open subset $U$ of a 2-manifold $\mathcal{M}$ to an open subset $C \subseteq \reals^2$, resulting in a real-vector space representation of $U$.
 }
 \example{Coordinate Chart}{
-    We will use the surface of the earth as $\mathcal{M}$ and construct a our own coordinate chart. For simplicity, we will only be mapping the open upper hemisphere $\subset \mathcal{M}$ to the open unit-disc $C$ by projecting the hemisphere onto the unique plane that cuts through the equator. 
+    We will use the surface of the earth as $\mathcal{M}$ and construct a our own coordinate chart. For simplicity, we are modeling it as a unit-sphere and will only be mapping the open\footnote{This means we exclude the equator.} upper hemisphere $\subset \mathcal{M}$ to the open unit-disc $C$ by projecting the hemisphere onto the unique plane that cuts through the equator. 
+    \begin{center}
+        \includegraphics[width=0.5\columnwidth]{../images/hemisphere.png}
+        \captionof{figure}{The northern hemisphere obtained by cutting through the equator. Texture: Google Earth}
+    \end{center}
     
     An invertible map from the unit-disc to the hemisphere is given by 
     \begin{align*}
         \text{disc-to-hemisphere}(\begin{bmatrix}x & y\end{bmatrix}^\top) = \\\begin{bmatrix}x & y & \sqrt{1 - x^2 - y^2}\end{bmatrix}^\top 
     \end{align*}
-    The inverse of this map corresponds exactly to projecting the hemisphere onto the equatorial plane.
-    % [PICTURE OF UNIT DISC AND DOME WITH ARROW MAPPING THEM].
-    
-    % [PICTURE OF GOOGLE EARTH SEEING PART OF NORTHERN HEMISPHERE]
-    % [PICTURE OF PROJECTION WITH EQUIDISTANT LONGITUDAL LINES]
-    TODO: SPACE OUT THE LONGITUDAL LINES ONE FOR EACH 10 DEGREES.
-    When we use our map on the real chart, we end up with the above map. Note how the longitudal lines get compressed towards the edge. In our chart, local coordinate $(0, 0)$ corresponds to the north-pole. We will further study properties of this map in following examples.   
+    The $x, y$ coordinates span the equatorial plane and the third coordinate is the height of the hemisphere. The inverse of this map corresponds exactly to projecting the hemisphere onto the equatorial plane.
+    \begin{center}
+        \hspace*{-0.06\columnwidth}\includegraphics[width=0.7\columnwidth]{../images/hemisphere_circle_of_latitude.png}
+        \captionof{figure}{The northern hemisphere projected down onto the equatorial plane. The north pole is placed at local coordinates $(0, 0)$. Three circles of latitude are shown, equally far apart on the hemisphere - note how our map does not render them equally spaced.
+        We will further study the properties of this map in a later example.}
+    \end{center}
 }
     
     
@@ -60,7 +62,10 @@ In contrast to $\reals^2$, the surface of the earth is not a vector space. There
         &= t^\top M\; t
     \end{align*}
     
-    and angle $\theta$ between tangent vectors $t, t^\prime \in \mathcal{TM}_p$ are computed as $$\cos(\theta) = \frac{t^\top M \; t}{\sqrt{t^\top M \; t}\sqrt{t^{\prime \top} M \; t^\prime}}$$
+    and angle $\theta$ between tangent vectors $t, t^\prime \in \mathcal{TM}_p$ are computed as 
+    \begin{align}\label{eq:angle}
+        \cos(\theta) = \frac{t^\top M \; t}{\sqrt{t^\top M \; t}\sqrt{t^{\prime \top} M \; t^\prime}}
+    \end{align}
 }
 The explicit dependance of the metric tensor $g(p)$ on the coordinate $p$ is often omitted in notation, but we will keep it explicit. 
 
@@ -73,13 +78,19 @@ Informally, $ds$, $dx$, and $dy$ are the same symbol as $dx$ in $\int_0^1 f(x) \
 \example{Pythagorean Theorem}{
      $g$ can be thought of as encoding a local version of the Pythagorean Theorem. If $g = I_2 = \begin{bmatrix} 1 & 0 \\ 0 & 1\end{bmatrix}$, then the formula for infinitesimal distance reduces to exactly $$ds^2 = dx^2 + dy^2$$ which is similar to $c^2 = a^2 + b^2$. In fact, $I_2$ is the metric tensor of $\reals^2$ independently of position $p$. This reflects the fact that the Pythagorean theorem holds at all positions in $\reals^2$, not just around the origin or some other specific point. If the entries of $g$ change, we will get different identities.
 }
-
+\example{Visualizing the Metric Tensor}{
+    In cartography, a common way to visualize the degree distortion of the chart is using the Tissot Indicatrix. It shows how a patch of equal area and shape on the earth will be represented on the map. A good approximation of the Tissot Indicatrix can be computed using the metric tensor, by showing (scaled\footnote{The eigenvalues and vectors have been scaled down with a factor of $0.003$ for this figure.}) eigenvectors and -values of the inverse metric tensor as an ellipse, centered at the point of evaluation.
+    \begin{center}
+        \includegraphics[width=0.95\columnwidth]{../images/hemisphere_tissot_indicatrix.png}
+        \captionof{figure}{The hemisphere-map with Tissot Indicatrices at evenly spread locations on the surface of the earth. The radius of the ellipse in a certain direction can be interpreted as the speed at which someone traveling at constant speed on hemisphere would be traveling at when viewed from the map.}
+    \end{center}
+    Another way visualizing 2D metric tensors are with a pseudo-mesh, which is explored in \cite{mesh_visualization}.
+}
 \example{Rank of Metric Tensor}{
-    The determinant of the 2D Metric Tensor reflects how areas on the surface are scaled locally. By virtue of positive-definiteness, the rank of the 2D metric tensor $g(p)$ will always be 2 and the determinant strictly positive. However, positive-semidefinite (rank-deficit) metric tensors can be interesting to study for intuition. 
+    The determinant of the 2D Metric Tensor reflects how areas on the surface are scaled locally. By positive-definiteness, the rank of the 2D metric tensor $g(p)$ will always be 2 and the determinant strictly positive. However, positive-semidefinite (rank-deficit) metric tensors can be interesting to study for intuition. 
     
-    Consider a metric tensor $\begin{bmatrix} 1 & 0 \\ 0 & 0\end{bmatrix}$, for which the infinitesimal length-formula reduces to $ds = dx$. With this metric, locally the length of infinitesimal $\begin{bmatrix} dx & dy \end{bmatrix}^\top$ depends only on $dx$ with no contribution from $dy$. We would say that at this point the space is locally one dimensional, with space being collapsed in direction of the second basis. 
-    
-    In the same scenario the $\cos(\theta)$ formula will yield only $0$ and $\pi$, which are the only two possible angles between parallel vectors. 
+    Consider a metric tensor $\begin{bmatrix} 1 & 0 \\ 0 & 0\end{bmatrix}$, for which the infinitesimal length-formula reduces to $ds = dx$. With this metric, locally the length of infinitesimal $\begin{bmatrix} dx & dy \end{bmatrix}^\top$ depends only on $dx$ with no contribution from $dy$. At this point the space is locally one dimensional, with space being collapsed in direction of the second coordinate basis-vector. 
+    For this metric, the $\cos(\theta)$ formula (\ref{eq:angle}) will yield only $0$ and $\pi$, which are the only two possible angles between parallel vectors. 
     
     For a rank 0 matrix (which is the 2x2 zero matrix), $ds = 0$, and angles are undefined as a division by zero occurs.
 }
@@ -87,14 +98,14 @@ Informally, $ds$, $dx$, and $dy$ are the same symbol as $dx$ in $\int_0^1 f(x) \
 
 \subsection*{Measuring the length of a path with the Metric Tensor}
 If a sailor plans a route (not necessarily straight) on their chart, they will be keen to know the length it represents. From the distortion of the maps seen earlier, we have determined that we cannot simply measure directly, as lengths are not guaranteed to have been represented faithfully. To measure exactly the length of a route, we will have to integrate an expression the infinitesimal length $ds$ of the velocity vector of the line over the whole span of the line. 
-    
+\\
 We will parameterize the route $r$ with parameter $t \in (0, T)$ to get $r: (0, T) \to \reals^2$. $r$ is in fact a 1-manifold, and the parameterization a choice of local coordinate system. 
-
+\\
 Symbolically, the length can be written simply as $L(r) = \int_r ds$ where $ds$ is the infinitesimal length obtained from the metric tensor $g(p)$. But this is not very computable definition. By using the local parameterization we get:
 
-\begin{align*} 
-    L(r) = \int_{[0, T]} \sqrt{\nabla r(t)^\top g(r(t))\; \nabla r(t)} \; dt
-\end{align*}
+\begin{align} \label{eq:length}
+    L(r) = \int_{[0, T]} \sqrt{\nabla r(t)^\top g(r(t))\; \nabla r(t)} \; dt 
+\end{align}
 
 Even for many seemingly simple cases of $g$ and $r$ this integral has no analytic solution, because it turns out to be an instance of an elliptic integral, which are integrals of the form $\int \sqrt{P(t)}$, where $P$ is some polynomial of $t$. There will be an instance of this later, where we will resort to numerical methods.
 
@@ -110,13 +121,6 @@ Even for many seemingly simple cases of $g$ and $r$ this integral has no analyti
     This is symmetric, positive definite and well-defined in for $x^2+y^2 < 1$, which is exactly the open unit-disc. At the center, $(0,0)$, the metric tensor coincides with the Euclidean metric, reflecting the fact that the north-pole did not get distorted during the projection, as it was already aligned with the plane we project onto.
 }
         
-\example{Visualizing the Metric Tensor}{
-
-    In cartography, a common way to visualize the degree distortion of the chart is using the Tissot Indicatrix. [FIGURE OF Equirectangular TISSOT]. It shows how patches of equal area and shape on the earth will be represented on the map. The Equirectangular Projection necessarily stretches the two poles into two huge areas. An approximation of the Tissot Indicatrix can be computed using the metric tensor, by showing the eigenvectors and -values of the inverse metric tensor. [FIGURE OF Hemisphere TISSOT. We can see that, when getting close to the border, there is heavy compression along the outwards radial latitudal direction, while the longitudal distances are unaltered.]
-    [FIGURE of projected streched sheet metric]
-    [FIGURE of projected bell metric]
-    [FIGURE of hyperbolic metric]
-}
 
 \definition{Riemannian Manifold}{
     A Riemannian Manifold is a pair $\big(\mathcal{M}, g\big)$ of a smooth manifold $\mathcal{M}$ with Riemannian metric $g$.
@@ -126,33 +130,39 @@ Even for many seemingly simple cases of $g$ and $r$ this integral has no analyti
     An isometric immersion of a Riemannian 2-Manifold $\big(\mathcal{M}, g\big)$ into a 2-dimensional submanifold $\hat{\mathcal{M}} \in \reals^3$ is a map $f: \mathcal{M} \to \hat{\mathcal{M}}$ such that the distance between any two points in $\mathcal{M}$ under $g$ is the same as the distance between their images under $f$ measured along the surface of in $\reals^3$. If $f$ is additionally a bijection, meaning that $\hat{\mathcal{M}}$ does not self-intersect, $f$ is an embedding. If it self-intersects it is an immersion. The space that the manifold is mapped into is referred to as the ambient space. Throughout this thesis, where applicable, the ambient space is $\reals^3$.
 }
 \noindent For our purposes, having an immersion will be sufficient. The embedding is useful for visualization purposes, but is not necessary for the numerical methods we will be using.
-    
 \example{Isometric embedding}{
     By construction, $\text{disc-to-hemisphere}(\cdot)$ is an isometric embedding of the Riemannian Manifold given by $$\big(\text{open unit-disc},\; g_{\text{hemisphere}}\big)$$ 
-    The hyperbolic plane, explored in a later example of a 2-manifold, can be isometrically immersed in $\reals^3$, but has no known embedding into it.
 }
+\example{The Hyperbolic Metric}{
+    The metric of the 2-dimensional hyperbolic plane $\mathbb{H}^2$ is defined as $$g_{\text{hyperbolic}}\left(\begin{bmatrix}
+    x \\ y
+    \end{bmatrix}\right) = \frac{1}{1- x^2 - y^2} \begin{bmatrix} 1 & 0 \\ 0 & 1\end{bmatrix}$$ with $\begin{bmatrix}
+        x & y
+        \end{bmatrix}^\top$ as local cartesian coordinates within the unit-disc. The hyperbolic metric is used in the Poincaré disk model of the hyperbolic plane, which, unlike the sphere, is unbounded. It is also not isometrically embeddable in $\reals^3$ (Hilbert's Theorem). Subsets of it can however be embedded. The authors of \cite{shape_from_metric} give a method to embed a portion of the hyperbolic plane in $\reals^3$ and have a great visualization. For copyright reasons, we will have to make do with the surface of kale leaves, which is a common example of hyperbolic geometry in nature.
+    \begin{center}
+        \includegraphics[width=1\columnwidth]{../images/hyperbolic_kale.png}
+        \captionof{figure}{Kale leaves. The veins of the leaf are approximately hyperbolic geodesics, which are the shortest paths between points on the leaf. Similarly to how an orange peel cannot be flattened to a sheet without tearing, the kale leaf cannot be flattened to a plane without folding in on itself. One has constant positive gaussian curvature, the other negative.}
+        \includegraphics[width=0.8\columnwidth]{../images/hyperbolic_space_tissot.png}
+        \captionof{figure}{Tissot Indicatrices shown on Poincaré disc model of the hyperbolic plane. It is not a mistake that the patches are circular - the metric is isotropic, meaning not depending on direction of travel. Note that in this figure the indicatrices are \textit{not} uniformly spaced like they were hemisphere.}
+    \end{center} 
+}
+\subsubsection*{Boundaries}
+Something we have so far been evading is the question of boundaries on a 2-manifold. The boundary of a 2-manifold $\mathcal{M}$ is denoted $\partial \mathcal{M}$ and is a 1-manifold. The boundary of a boundary is always empty. Boundaries are common in the context of numerical solutions of PDEs because of our bounded computational power. If one has an unbounded manifold (say, $\mathcal{M} = \reals^2$ or $\mathbb{H}^2$), one must solve the PDE on a subset of the manifold instead of the whole, which means that a boundary is introduced. However not all manifolds must be truncated like this. The sphere or torus or surfaces of everyday objects are all bounded 2-manifold without a boundary, which means the PDE can usually be solved on the entire domain, and complications with boundaries are avoided.
 
 \subsection*{Intrinsic and Extrinsic Properties}
 Properties of Manifolds can be grouped into two categories. Extrinsic properties require the manifold to be viewed as part of the ambient space. The normal vector, which by definition is orthogonal to the tangent space at each point, and position in ambient space are extrinsic properties whose definition require the ambient space. 
-
+\\
 Intrinsic properties are independent of any embedding and arise solely from the manifold's internal structure. Lengths of paths and angles of tangent vectors are examples.
 
-\subsubsection*{Boundaries}
-Something we have so far been evading is the question of boundaries on a 2-manifold. The boundary of a 2-manifold $\mathcal{M}$ is denoted $\partial \mathcal{M}$ and is a 1-manifold. The boundary of a boundary is always empty. Boundaries are common in the context of numerical solutions of PDEs because of our bounded computational power. If one has an unbounded manifold (say, $\mathcal{M} = \reals^2$), one must solve the PDE on a subset of the manifold instead of the whole, which means that a boundary is introduced. However not all manifolds must be truncated like this. The sphere or torus or surfaces of everyday objects are all bounded 2-manifold without a boundary, which means the PDE can usually be solved on the entire domain, and complications with boundaries are avoided.
-
 \subsection*{Representing Manifolds on a Computer}
-
 We now move to the practical side, anticipating the future involvement of a computer. We will start by introducing the two representations of Riemannian 2-Manifolds of interest: Manifolds given by a local coordinate system and a metric, or Manifolds represented as a triangulation with triangle meshes. Technically, we are representing them as 'Simplicial Complexes', but the term 'triangulation' will be more familiar and simplify the explanation.
-
 \subsection*{Triangulation}
 \subsubsection*{Extrinsic Geometry}
 A triangle mesh is a collection of vertices $\{V_i\}_{i=0}^{|V|}$ and a set of faces $\{F_i\}_{i=0}^{|F|}$, with $V_i \in \reals^3$ and $F_i \in V \times V \times V$. A face is a an ordered triple of vertices, but even permutations of a face are considered the same face. We say that the face is oriented in one of two ways - this is determines the ambiguity of the normal vector. Edges are defined implicitly by the faces.
 A triangle mesh is most commonly represented with each vertex having coordinates in the ambient space. To tie this representation to a specific metric, it is most natural to assume that it represents an isometric immersion (or embedding if the mesh has no self-intersections) of a 2-manifold. [Whats this called? euclidean metric of the ambient space?]. This common representation of a triangulation is called an extrinsic triangulation of the 2-manifold.
-
 \subsubsection*{Intrinsic Geometry}
 The extrinsic triangulation allows one to compute edge lengths from the norm of the difference between two adjacent vertices. We can however also make do with an intrinsic triangulation, wherein no reference to the ambient space is made. 
 \definition{Intrinsic Triangulation}{
-
     This representation stores a set of edges $\{E_i\}_{i=0}^{|E|}$ and their lengths $\{e_i\}_{i=0}^{|E|}$. The faces are stored like previously, but defined through an ordered triple of edges instead of vertices. Like faces, edges are an ordered tuple with two possible orientations that must be kept track of. If a face $(E_i, E_j, E_k)$ has associated lengths $(e_i, e_j, e_k)$, there are some restrictions that the lengths must satisfy: 
     $$0 < e_i < e_j + e_k$$
     $$0 < e_j < e_i + e_k$$
@@ -160,41 +170,83 @@ The extrinsic triangulation allows one to compute edge lengths from the norm of 
     This is a strict version of the triangle inequality, ensuring that all lengths define valid nondegenerate triangles.
     }
 \noindent
-
 The advantages of intrinsic triangulations are explored in depth in \cite{sharp2021intrinsic}. The following are useful formulas for computing areas and angles of faces in an intrinsic triangulation.
-    
 \example{Heron's Formula for calculating Areas of Faces}{
     Given a face $(E_i, E_j, E_k)$ the area can be computed as 
     $$\text{Area} = \sqrt{s(s-e_i)(s-e_j)(s-e_k)}$$
     where $s = \frac{e_i + e_j + e_k}{2}$ is the semiperimeter of the triangle.
 }
-
-
 A good rule of thumb is that if a property cannot be computed from edge-lengths alone, it is not extrinsic \cite{sharp2021intrinsic}. The normal vector or dihedral angles across triangles are examples of these.
-
 \example{The Law of Cosines for calculating Interior Angles of Faces}{
     Given again a face $(E_i, E_j, E_k)$, the cosine of the interior angle $\alpha$ opposite of edge $E_i$ can be computed as 
     $$\cos(\alpha) = \frac{e_j^2 + e_k^2 - e_i^2}{2e_je_k}$$
 }
-
-\subsubsection*{Manifold Triangle Mesh} [ARE BOUNDARIES OKAY?]
-When given an extrinsic triangulation, it is most natural to assume that it represents an isometric immersion (or embedding if the mesh has no self-intersections) of a 2-manifold, so this is what we do. Furthermore, for a triangle mesh to represent a 2-manifold, there are some restrictions to how the faces can be connected. An edge must be associated with $n \in \{1, 2\}$ faces and a face cannot share an edge with itself. This restriction of $n$ can be circumvented with some tricks (\cite{nonmanifold_laplacian}), but we will not cover them here. The case $n=1$ is realized only at boundary faces.
-
+\subsubsection*{Manifold Triangle Mesh}
+When given an extrinsic triangulation, it is most natural to assume that it represents an isometric immersion (or embedding if the mesh has no self-intersections) of a section of a 2-manifold. Furthermore, for a triangle mesh to represent a 2-manifold, there are some restrictions to how the faces can be connected. An edge must be associated with $n \in \{1, 2\}$ faces and a face cannot share an edge with itself, with the case $n=1$ is realized only at boundary faces. Mesh structures with $n>2$ can be permitted with some tricks that involve "inflating" the mesh (see \cite{nonmanifold_laplacian}), but we will not cover them here and work only with Manifold meshes.
 \definition{Dual Mesh}{
     In an extrinsic triangulation, the dual of a triangle mesh is a new mesh ($V^\prime,\; F^\prime$) with 
     $$|V^\prime| = |F| \text{  and  }|F^\prime| = |V|$$
     The vertex $V^\prime_i$ is placed at the center of face $F_i$ of the original mesh, and new faces $F^\prime_i$ are centered at the $V_i$. The two dominant definitions of a triangular center are the barycenter and circumcenter, which lead to the notions of barycentric dual mesh and the circumcentric dual mesh. The barycenter $B_i$ of face $F_i = (V_i, V_j, V_k)$ is simply defined as $B_i = \frac{1}{3}(V_i + V_j + V_k)$, while the circumcenter is the center of the circumcircle, which is the unique circle that passes through all three vertices. 
     \\
-    In the dual mesh, two faces that share an edge $E_i$ in the original mesh will become two dual vertices connected by the dual edge $E_i^\prime$
+    In the dual mesh, two faces that share an edge $E_i$ in the original mesh will become two dual vertices connected by the dual edge $E_i^\prime$.
 }
-The length of the dual edge is generally not the same as the length of the original edge and can be negative if the circumcentric dual mesh is used. This is because the circumcenter of a triangle with inner angle $\theta > \pi/2$ will be outside the triangle, leading to what is interpreted as a negative length.
+In an intrinsic triangulation, the mapping of vertices to dual faces and faces to dual vertices is the same, but the circumcenter and barycenter cannot be defined explicitly as there are no stored vertex coordinates. One must instead store the length of the dual edge. This length depends on the position of the vertices (barycenter vs circumcenter) and the edge lengths of the original mesh.
+\example{Choice of Dual Mesh}{
+    The choice of dual will influence edge lengths and dual face areas (see following figures).
+    \begin{center}
+        \includegraphics[width=0.7\columnwidth]{../images/barycentric.png}
+        \captionof{figure}{Barycentric Dual mesh. The dual vertices in red are placed at the barycenter of each face, guaranteeing a central position and positive edge lengths. 
+        For clarity, edges $(I, II)$ and $(B, C)$ are dual, while polygon $(I, II, III, IV, V, VI)$ is dual to vertex $C$.}
+        \label{fig:barycentric_dual}
+        \includegraphics[width=0.7\columnwidth]{../images/circumcentric.png}
+        \captionof{figure}{Circumcentric Dual mesh. Each dual vertex is placed at the circumcenter of the face. For obtuse triangles such as $\text{FGC}$, the barycenter $\text{V}$ can land outside the face. If the obtuse triangles have their respective circumcenters in the opposite triangle, the edge length is considered negative (not pictured). The circumenctric dual has the property that pairs of edges and dual edges are orthogonal. Contrast this with the barycentric dual above.}
+        \label{fig:circumcentric_dual}
+    \end{center}
+    By the use of intrinsinc edge-flips \cite{sharp2021intrinsic}, one can build an intrinsic Delaunay triangulation, which guarantees that the circumcentric dual mesh has positive edge lengths. This leads to high numerical stability and well-conditioned matrices as described in \cite{intrinsic_laplacian}. In this thesis we stick to constructing good triangulations in the first place.
+}
+\section*{Triangulating a 2-Manifold from its Metric Tensor}
+Given a Riemannian 2-Manifold $\big(\mathcal{M}, g\big)$ we will now describe a way to triangulate it. This is one of the contributions of the thesis. The triangulation will represent the intrinsic geometry - we will not be embedding it manifold into a space. The triangulation will result in a intrinsic triangle mesh, with only edge lengths and faces defined - no position in space.
+\\ 
+Let $g : C \to \reals^{2\times2}$. We will be triangulating the local-coordinate domain $C$ of the metric tensor $g$, but using the $g$ to gauge the properties (lengths, areas) of the triangles. The triangulation will thus satisfy the intrinsic properties of the manifold by encoding the metric tensor in the edges.
 \\
-In an intrinsic triangulation, the mapping of vertices to dual faces and faces to dual vertices is the same, but the circumcenter and barycenter cannot be defined as there are no stored vertex coordinates. Because we are storing edge lengths, we must instead store the length of the dual edge. This length depends on the position of the vertices (barycenter vs circumcenter) and the edge lengths of the original mesh. The circumcentric dual has the property that a pair of dual edges will always be orthogonal to each other, while the barycentric dual guarantees positive dual edge lengths. By the use of intrinsinc edge-flips \cite{sharp2021intrinsic}, one can build an intrinsic Delaunay triangulation, which guarantees that the circumcentric dual mesh has positive edge lengths. This leads to high numerical stability and well-conditioned matrices as described in \cite{intrinsic_laplacian}. 
+The algorithm can be described quite simply:
 
-\section*{Discrete Exterior Calculus}
+\section{Preparation phase}
+\begin{enumerate}
+    \item Require as input:
+    \begin{enumerate}
+        \item An initial triangulation $\mathbf{\Delta}_0$ of $C$ that partitions the whole space. The vertices should be spread uniformly in $C$ if there is no prior knowledge of the metric tensor.
+        \item The metric tensor $g$, mapping from any point in $C$ to a 2x2 matrix.
+        \item A maximum area $A_{\text{max}}$ for the each final triangle. This is a parameter that can be set to control the size of the triangles.
+        \item A maximum aspect ratio $\rho$ for which $\rho > e_{max}/e_{min}$, the ratio of longest to shortest edge in each triangle
+    \end{enumerate}
+    \item For each $E_i = (V_a, V_b)$ in $\mathbf{\Delta}_0$, parametrize it by 
+    $$r_i(t) = (1-t)V_a + tV_b \hspace{5mm} t\in[0,1]$$
+     and compute its length $e_i$ under the metric tensor $g$ (equation \ref{eq:length}) 
+    $$e_i = \int_{[0,1]} \sqrt{
+        r(t)^\top g(r(t)) r(t) } \; dt
+    $$
+    \item For each triangle, compute the area using Heron's formula, and the aspect ratio using the edge lengths. Compare to $A_{\text{max}}$ and $\rho$. If the area is too large, mark the triangle. If the aspect ratio is too large, mark the triangle.
+    \item Return triangles marked for refinement.
+\end{enumerate}
+\section{Iterative Refinement phase}
+While there are marked triangles, do the following:
+\begin{enumerate}
+    \item Take a marked triangle $T$ and remove the mark. Either the area or aspect ratio must be too large. Refer to edges of $T$ as $E_{\text{long}}, E_{\text{medium}}, E_{\text{short}}$ with the property $e_{\text{long}} \geq e_{\text{medium}} \geq e_{\text{short}}$.
+    \item Use longest-edge bisection\cite{longest_edge_bisection} to split $T$ into two triangles $T_1, T_2$ by bisecting the longest edge $E_{\text{long}}$.
+\end{enumerate}
+\example{Mesh Refinement}{
+    If a triangle mesh is too coarse or is highly irregular, such as having a big aspect ratio or different sizes, the mesh must be refined or corrected. The first idea that might come to mind is to split one triangle into 2, 3 or 4 new triangles. This is a common approach, but there is an important consideration to make. After a split, a mesh might no longer consist of just triangles, but also quadrilaterals or even higher-order polygons. [SEE EXAMPLE]
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{../images/graph.png}
+        \captionof{figure}{A wide figure spanning both columns.}
+    \end{center}
+
+}
+\section*{Building a Laplacian from a Triangle Mesh}
 This section will describe how to discretize the differential geometry of manifolds. The goal is to approximate the continuous differential operators on a manifold with discrete operators on a mesh. The theory of Discrete Exterior Calculus (DEC) is a powerful tool for this purpose. Although the results we will present are not new, the theory is not widely known and is not covered in standard textbooks on numerical methods and is not part of the standard curriculum in computer science.
 
-\subsection*{Exterior Algebra Crash Course}
+\subsection*{Crash Course: Exterior Algebra}
 For a more thorough introduction, see \cite{craneDDG}.
 Exterior Algebra, also known as Grassmann Algebra, generalizes traditional vectors to $k$-vectors (also called $k$-forms), which form a vector space within each degree $k$. A $0$-vector is identical to a scalar, and a $1$-vector corresponds to a traditional vector in the space.
 \\
@@ -203,7 +255,7 @@ The binary change in sign is related to the two possible orientations of the nor
 \\
 The unary 'Hodge star' operator $\star$ maps a $k$-vector to an $(n-k)$-vector. In a sense it maps to a dual representation of the geometric object, as $\star w$ is $1-$vector representing the normal vector of the parallelogram $w$. The notion of duality is strengthed by the relation $\star\star w = w$. For $n=2$, $\star$ maps $0$-vectors to $2$-vectors and vice-versa, while $1$-vectors are mapped to the $1$-vectors that are rotated by $90^\circ$ degrees. The strong connections to the ideas of the dual mesh should be noted. The Exterior Algebra is a language that is well-suited for describing the geometry of manifolds, and is used in the theory of differential forms, which we will cover next.
 
-\subsection*{Exterior Calculus Crash Course}
+\subsection*{Crash Course: Exterior Calculus}
 For more intuition, see \cite{craneDDG}. For an in-depth coverage relating also to PDEs, see \cite{bryant1991exterior}. In standard multivariable calculus, the differential $ds$ represents an infinitesimal arc length element along a curve. For a 1-dimensional manifold $\mathcal{M}$, the total length can be expressed as $\int_{\mathcal{M}} ds$. Here, $ds$ is derived from the 1-forms $dx$ and $dy$, which serve as basis elements in the local coordinate system. These 1-forms encapsulate how distances are measured in each coordinate direction.
 
 In exterior calculus, we extend the concept of differentials to higher-degree forms by utilizing the previously defined wedge product. The 2-form $dx \wedge dy$ represents an infinitesimal area element. Consequently, the surface area of a 2-dimensional Euclidean patch $R \subset \reals^2$ can be expressed as $\int_{R} dx \wedge dy$. If $R$ is locally parametrized by a 2-dimensional coordinate system, this integral can be evaluated as a nested integral $\int_{y_1}^{y_2}\int_{x_1(y)}^{x_2(y)} dx \; dy$\footnote{This expression should not be surprising, but is mentioned to relate the abstract object $dx \wedge dy$ to something that feels more familiar.}, which computes the area over the specified region.
@@ -211,26 +263,26 @@ In exterior calculus, we extend the concept of differentials to higher-degree fo
 A function that maps a surface to a continuously varying $k$-form is called a differential $k$-form. The unary exterior derivative operator $\text{d}$ maps a differential $k$-form to a differential $(k+1)$-form. For a differential $0$-form $\phi$ (a scalar field), the exterior derivative $\text{d}\phi$ corresponds to the gradient of $\phi$ in the sense that 
 $\text{d}\phi(\mathbf{v}) = \mathbf{v} ^\top \nabla \phi$ for any tangent vector $\mathbf{v}$. This illustrates the close relationship between the exterior derivative and the traditional gradient operator. 
 \\
-The wedge product $\wedge$ and Hodge star $\star$ treat $k$-vectors and $k$-forms in a symmetric manner. When applied to differential $k$-form, the Hodge star maps it to a differential $(n-k)$-form, where the Hodge-star can be though of being applied elementwise at each point in space. The wedge product can wedge together two differential forms by taking the elementwise wedge product of the two forms.
+The wedge product $\wedge$ and Hodge star $\star$ treat $k$-vectors and $k$-forms in a symmetric manner. When applied to differential $k$-form, the Hodge star maps it to a differential $(n-k)$-form, where the Hodge-star can be though of being applied elementwise at each point in space. The wedge product can wedge together two differential forms by taking the elementwise wedge product of the two forms for each point in space.
 \\
-$k$-vectors and $k$-forms are dual\footnote{For an analogy to better get a sense of this symmetry, think of a ruler: the ruler can be used to measure the length of an object (in $\text{cm}$), but the object can also be used to measure the length of the ruler (in object-length-units)} in the sense that a $1$-vector $v$ can be related to a $1$-form $\nu$ through the unary musical operators $\flat$ ("flat") and $\sharp$ ("sharp"), $v^\flat = \nu \iff v = \nu^\sharp$.
+$k$-vectors and $k$-forms are dual\footnote{For an analogy to better get a sense of this symmetry, think of a ruler: the ruler can be used to measure the length of an object (in $\text{cm}$), but the object can also be used to measure the length of the ruler (in object-length-units)} in the sense that a $1$-vector $v$ can be related to a $1$-form $\nu$ through the unary musical operators $\flat$ ("flat") and $\sharp$ ("sharp"), $$v^\flat = \nu \iff v = \nu^\sharp$$
 Unlike the gradient, which is limited to scalar fields, the exterior derivative provides a unified framework that generalizes various differential operators, such as curl ($\text{curl}\;F =\star \text{d}F^\flat$) and divergence ($\text{div}\;F =\star \text{d}\star F^\flat$), within a single algebraic structure. This generality is what will finally lead to a formula for the Laplacian, which is the main focus of this entire chapter. 
 \definition{Laplacian}{
     The Laplacian of a scalar-valued\footnote{This can also be generalized to $k$-vector-valued functions $g$, for which the Laplacian takes the somewhat artistic and cryptic form $\Delta g = \star \text{d}\!\star\!\text{d}g + \text{d}\!\star\!\text{d}\!\star\! g$. We will not dig deeper here.} function $f$ is defined as
     $$\Delta f = \star \text{d}\!\star\!\text{d}f$$
     which is again a scalar function. As in the Euclidean definition, the Laplacian can also be expressed as the divergence of the gradient, $$\Delta f = \text{div} \nabla f$$ exressing the divergence with $\star \text{d}\star$ and the gradient operator with $\text{d}$.
 }
-The notation and simple symbols hide a lot of complexity and changes in objects (as good notation does). However, it will be instructive to take a closer look to convince oneself that what is going on makes sense.
+The notation hides a lot of complexity and changes in objects (as good notation should). For newcomers, it will therefore be instructive to take a closer look to convince oneself that what is going is sensible, at least in terms of input/output.
 \example{Investigating the form of the Laplacian}{
     We will unpack the definition of the Laplacian of $f$, $\star \text{d}\!\star\!\text{d}f$. We start with
     $f$, a scalar-function, or, equivalently, a differential $0$-form. $\text{d}f$ takes our differential $0$-form to a differential $1$-form. For ambient space dimension $n$, $\star\text{d}f$ then maps this to a dual representation as a differential $(n-1)$-form, and another application of the exterior derivative then gives $\text{d}\star\text{d}f$, which has again increased the degree to a differential $n$-form. A final application of $\star$ then takes us to the dual representation, resulting in a differential $(n-n)$-form, a $0$-form, back to a scalar field, as one would expect from the Laplacian.
     Note that the choice of the ambient space dimension $n$ did not matter, as it was cancelled out in the end. The Laplacian is a scalar field, no matter the dimension of the ambient space, which emphasizes the intrinsic nature of it.
 }
 
-\subsection*{Discrete Exterior Calculus Crash Course}
+\subsection*{Crash Course: Discrete Exterior Calculus}
 Discrete Exterior Calculus (DEC) is a relatively new (2003, \cite{discrete_exterior_calculus_thesis}, \cite{discrete_exterior_calculus}) theory that fully embraces the discrete nature of triangle meshes. It is a discrete version of the exterior calculus. DEC defines discrete versions of the Laplacian, Hodge star, and exterior derivative, all of which are directly applicable to manifold triangle meshes. We will give the main result that is relevant to the probabilistic numerical solver on manifolds, which are the interpretation of the mesh as a manifold and how to build the Laplacian matrix. 
 \\
-In DEC, one uses the “exact input” hypothesis \cite{sharp2021intrinsic}, which states that the mesh is not interpreted as an approximation of a manifold, but as a manifold itself. This is a strong assumption, but it is necessary to build a Laplacian that is consistent with the geometry of the mesh. The mesh forms a partition of the manifold into faces, and each triangular face is assumed to be an isometric embedding of a triangular patch of the manifold. The mesh in its entirety then consists of many patches, each of which are endowed with a local Euclidean metric. A local coordinate system per face can be defined using barycentric\footnote{Barycentric coordinates are local coordinates for simplices. A point, straight line, triangle, and tetrahedron are instances of a $0$-, $1$-, $2$-, and $3$-simplices respectively. For $|V|$ vertices $(v_1, \dots, v_{|V|})\in \reals^{n \times |V|}$ in some $k \geq |V|$-dimensional ambient space, local coordinates $\Lambda = (\lambda_1, \dots, \lambda_{|V|}) \geq 0$ with $\sum_{i=1}^{|V|} \lambda_i = 1$ correspond to point $p(\Lambda) = \sum_{i=1}^{|V|} \lambda_i v_i$ which is a convex combination of the vertices, parametrizing the interior and boundary} coordinates.  The length $e_a$ of an edge $(V_i, V_j)$ between two vertices will thus represent the actual length of the path along the manifold between the two vertices.
+In DEC, one uses the “exact input” hypothesis \cite{sharp2021intrinsic}, which states that the mesh is not interpreted as an approximation of a manifold, but as a manifold itself. This is a strong assumption, but it is necessary to build a Laplacian that is consistent with the geometry of the mesh. The mesh forms a partition of the manifold into faces, and each triangular face is assumed to be an isometric embedding of a triangular patch of the manifold. The mesh in its entirety then consists of many patches, each of which are endowed with a local Euclidean metric. A local coordinate system per face can be defined using barycentric\footnote{Barycentric coordinates are local coordinates for simplices. A point, straight line, triangle, and tetrahedron are instances of a $0$-, $1$-, $2$-, and $3$-simplices respectively. For $|V|$ vertices $(v_1, \dots, v_{|V|})\in \reals^{n \times |V|}$ in some $k \geq |V|$-dimensional ambient space, local coordinates $\Lambda = (\lambda_1, \dots, \lambda_{|V|}) \geq 0$ with $\sum_{i=1}^{|V|} \lambda_i = 1$ correspond to point $p(\Lambda) = \sum_{i=1}^{|V|} \lambda_i v_i$ which is a convex combination of the vertices, parametrizing the interior and boundary.} coordinates.  The length $e_a$ of an edge $(V_i, V_j)$ between two vertices will thus represent the actual length of the path along the manifold between the two vertices.
 
 \example{Discretizing differential $0$- and $1$-forms onto a Manifold Triangle Mesh}{
     Scalar fields (differential 0-forms) on the manifold can discretized onto the mesh by sampling the scalar value of $\alpha(V_i)$ at each vertex $V_i$. A discretized scalar function is then stored as a $|V|$-dimensional vector $\bar{\alpha}_i = \alpha(V_i)$. 
@@ -250,21 +302,22 @@ In DEC, one uses the “exact input” hypothesis \cite{sharp2021intrinsic}, whi
 The discrete exterior calculus analog of the Laplacian is the DEC Laplacian $L$, also known as the cotan-Laplacian
 \definition{DEC Laplacian / cotan-Laplacian}{
     In DEC, each of the operators $\star \text{d}\!\star\!\text{d}$ become a matrix, and so the discrete Laplacian is a matrix as well. Specifically, the equation turns into
-    $$L = \star_0^{-1} \text{d}_1\!\star_1\!\text{d}_0$$
-    where $\star_0^{-1}$ is simply the matrix inverse of $\star_0$. This formula is by \cite{intrinsic_laplacian} for 2-manifolds, but can also be derived through a variational formulation as in the finite element method. Formulas exist also for $n-$dimensional manifolds \cite{ndcotangent}. The name stems from the fact that it can be built as a sum of cotangent weights in a neighborhood of each vertex,
-    \begin{align*}
-        w_{ij} &= \sum_{ijk \in F} \frac{1}{2}\cot(\theta_{ij})
-    \end{align*}
-    $w_{ij}$ is the cotangent weight, weighted over all triangles in which an edge $ij$ appears, with $\theta_{ij}$ as the angle of the triangle opposite the edge $ij$.
-    The cotan-Laplacian is then built as 
-    \begin{align*}
-        L_{ij} &= \begin{cases}
-            -w_{ij} & \text{if } i \neq j
-            \\
-            \sum_{k \in N(i)} w_{ik} & \text{if } i = j
-        \end{cases}
-    \end{align*}
-    with $N(i)$ as the set of all vertices connected to $i$ by an edge.
+    $$L = \star_0^{-1} \text{d}_1\!\star_1\!\text{d}_0 \in \reals^{|V|\times |V|}$$
+    where $\star_0^{-1}$ is simply the matrix inverse of $\star_0$. This formula is by \cite{intrinsic_laplacian} for 2-manifolds, but can also be derived through a variational formulation as in the finite element method. Formulas exist also for $n-$dimensional manifolds \cite{ndcotangent}. 
+    % The name stems from the fact that it can be built explicitly as a sum of cotangent weights in a neighborhood of each vertex,
+    % \begin{align*}
+    %     w_{ij} &= \sum_{ijk \in F} \frac{1}{2}\cot(\theta_{ij})
+    % \end{align*}
+    % $w_{ij}$ is the cotangent weight, weighted over all triangles in which an edge $ij$ appears, with $\theta_{ij}$ as the angle of the triangle opposite the edge $ij$.
+    % The cotan-Laplacian is then built as 
+    % \begin{align*}
+    %     L_{ij} &= \begin{cases}
+    %         -w_{ij} & \text{if } i \neq j
+    %         \\
+    %         \sum_{k \in N(i)} w_{ik} & \text{if } i = j
+    %     \end{cases}
+    % \end{align*}
+    % with $N(i)$ as the set of all vertices connected to $i$ by an edge.
 }
 The four terms in the definition of the DEC Laplacian will be covered next.
 \definition{$\text{d}_0$}{
@@ -272,43 +325,43 @@ The four terms in the definition of the DEC Laplacian will be covered next.
     $${\text{d}_0}_{ij} = \mathbf{1}[E_i = (V_j \to \cdot)] - \mathbf{1}[E_i = (\cdot \to V_j)]$$
     Each entry is in $\{-1, 0, 1\}$. Because an edge has only two endpoints, a row in $\text{d}_0$ will have at most two non-zero entries of opposing sign. Each column will have nonzero entries, equal to the number of edges incident to vertex $i$.
 }
-If $\text{d}_0$ is left-multiplied onto a discrete scalar function defined on the vertices, the result is a vector field defined on the edges. This is the discrete analog of the gradient operator.
+If $\text{d}_0$ is left-multiplied onto a discrete scalar function defined on the vertices, the result is a vector field represented on the edges. This is the discrete analog of the gradient operator. It can be thought of a generalization of the classic finite-differences formulas in Euclidean spaces. 
 \definition{$\star_1$}{
     The Hodge-star from $1$-forms in $(n\!\!=\!\!2)$-dimensional space $\reals^2$ is a matrix $\star_1 \in \reals^{|E|\times |E|}$ that takes a discretized vector field $\bar{\phi} \in \reals^{|E|}$ defined over the edges and returns a discretized vector field over the edges of the dual mesh. $\star_1\bar{\phi}$ represents the discretization of the dual vector field. The matrix is a diagonal matrix that holds on each entry $${\star_1}_{ii} = \frac{e_i^\prime}{e_i}$$ with $e_i^\prime$ as the length of the dual edge. $\star_1\bar{\phi}$ can be interpreted as a vector field that flows everywhere orthogonally to the original vector field (rotated $90^\circ$ everywhere).
 }
 Constructing $\star_1$ is the most computationally expensive part of building the Laplacian, as it requires the computation of the dual edge lengths. These and other related quantities can however all be precomputed and stored efficiently in sparse matrix structures for later use.
-\example{Calculating the Dual Edge Lengths}{
-    In extrinsic geometry with vertex coordinates given in ambient space, the dual mesh can be constructed explicitly, from which the dual edge lengths can be easily computed. In intrinsic geometry however, we can use the cotangent weights to compute the dual edge lengths. 
-    \\
-    $\textbf{Circumcentric Dual Edge Length}$: \\Assume vertices $A, B, C, D$ with triangles $ABC$, $BCD$ with shared edge $BC$ with length $e = |BC|$. The dual edge length $e^\prime$ is the distance between the two circumenters of the neighboring triangles. We can decompose this into the sum of the distance from edge $BC$ to each circumcenter.
+\example{Calculating the Circumcentric Dual Edge Lengths}{
+    In extrinsic geometry with vertex coordinates given in ambient space, the circumcentric dual mesh can be constructed explicitly, from which the dual edge lengths can be easily computed. In intrinsic geometry however, we can use the cotangent weights to compute the dual edge lengths.\\
+    Assume vertices $A, B, C, D$ with triangles $ABC$, $BCD$ with shared edge $BC$ with length $e = |BC|$. The dual edge length $e^\prime$ is the distance between the two circumenters of the neighboring triangles. We can decompose this into the sum of the distance from edge $BC$ to each circumcenter.
     The circumradius $R$ can be calculated as (\cite{sharp2021intrinsic}) 
     $$R = \frac{|AB||BC||CA|}{4\Delta} = \frac{|AB|}{2\sin{\theta}}$$
     with $\Delta$ the area of the triangle (given by Heron's formula). The second equality is an alternative expression by the law of sines with $\theta = \angle CAB$. The distance to the segment $AB$
     $$R\cos(\theta) = \frac{|BC|}{2}\frac{\cos{\theta}}{\sin{\theta}} = \frac{|BC|}{2}\cot{\theta}$$
-    In a symmetric manner we calculate the distance from $BC$ to the circumcenter of $BCD$ as $\frac{|AB|}{2}\cot{\gamma}$ for opposing angle $gamma = \angle CDB$, yielding final dual edge length $$e^\prime = \frac{|AB|}{2}(\cot{\theta} + \cot{\gamma})$$
-    Finally, this results in $${\star_1}_{ii} = \frac{e_i^\prime}{e_i} = \frac{1}{2}(\cot{\theta} + \cot{\gamma})$$ for appropriate values of $\theta$ and $\gamma$ related to edge at index $i$. At a boundary edge, one of the terms in the sum will be defined as zero.
+    In a symmetric manner we calculate the distance from $BC$ to the circumcenter of $BCD$ as $\frac{|AB|}{2}\cot{\gamma}$ for opposing angle $\gamma = \angle CDB$, yielding final dual edge length $$e^\prime = \frac{|AB|}{2}(\cot{\theta} + \cot{\gamma})$$
+    Finally, this results in $${\star_1}_{ii} = \frac{e_i^\prime}{e_i} = \frac{1}{2}(\cot{\theta} + \cot{\gamma})$$ for appropriate values of $\theta$ and $\gamma$ related to edge at index $i$. At a boundary edge, one of the terms in the sum will be defined as zero. \\This formula is what gives rise to the name "cotan-Laplacian".
 }
 With the dual edges in place, we now move to the final two matrices in the DEC Laplacian.
 \definition{$\text{d}_1$}{
-    The exterior derivative matrix $\text{d}_1 \in \reals^{|F|\times |E|}$ is a matrix that takes a discretized differential 1-form and maps it to a discrete differential 2-form. Similarly to $\text{d}_0$, the value of the $2$-form at face $F_i$ is the difference of the values at the edges that make up the face, with the sign depending on the orientation of the face.
+    The exterior derivative matrix $\text{d}_1 \in \reals^{|F|\times |E|}$ is a matrix that takes a discretized differential 1-form on edges and maps it to a discrete differential 2-form on faces. Similarly to $\text{d}_0$, the value of the $2$-form at face $F_i$ is sum of the values at the edges that make up the face, with the sign depending on the orientation of the face.
     \begin{align*}
-        {\text{d}_1}_{ij} &= \mathbf{1}[E_j = (V_a, V_b) \in F_i = (V_a, V_b, V_c)] 
-        \\&- \mathbf{1}[E_j = (V_b, V_a) \in F_i = (V_a, V_b, V_c)]
+        {\text{d}_1}_{ij} &= \mathbf{1}[E_j = (V_a \to V_b) \in F_i = (V_a, V_b, V_c)] 
+        \\&- \mathbf{1}[E_j = (V_b \to V_a) \in F_i = (V_a, V_b, V_c)]
     \end{align*}
-    Keep in mind that even permutations of a face are considered the same face, so $(V_a, V_b, V_c) = (V_c, V_a, V_b) = ((V_b, V_c, V_a))$. Rows in $\text{d}_1$ are related to faces and will have three non-zero entries in $\{-1, 0, 1\}$, and each column will have at most two non-zero entries.
+    Keep in mind that even permutations of a face are considered the same face, so $(V_a, V_b, V_c) = (V_c, V_a, V_b) = (V_b, V_c, V_a)$. Rows in $\text{d}_1$ are related to faces and will have three non-zero entries in $\{-1, 0, 1\}$, and each column, related to an edge, will have one or two non-zero entries (one if it is a boundary edge).
 }
 \definition{$\star_0$}{
-    The Hodge-star from $0$-forms in $(n\!\!=\!\!2)$-dimensional space $\reals^2$ is a matrix $\star_0 \in \reals^{|F|\times |V|}$ that takes a discretized $0$-form $\bar{\alpha} \in \reals^{|E|}$ defined over the edges and returns a discretized vector field over the edges of the dual mesh. An interpretation is that $\star_1\bar{\alpha}$ represents the discretization of the dual vector field, a vector field that flows everywhere orthogonally to the original vector field. The matrix is a diagonal matrix that holds on each entry $${\star_1}_{ii} = \frac{e_i^\prime}{e_i}$$, with $e_i^\prime$ as the length of the dual edge.
+    The Hodge-star from $0$-forms in $(n\!\!=\!\!2)$-dimensional space $\reals^2$ is a matrix $\star_0 \in \reals^{|F|\times |V|}$ that takes a discretized differential $0$-form and returns a discretized $2$-form over the faces of the dual mesh. The matrix is a diagonal matrix that holds in each entry $${\star_1}_{ii} = \frac{1}{\Delta}$$ with $\Delta$ as the area of the associated dual face of the vertex. In the DEC Laplacian, $\star_0$ is inverted, but since the matrix is diagonal, this is a simple operation.
 }
+\example{Dual Face Areas}{
+    The discrete Hodge-star is still an open question and a topic of research (\cite{hodge}). While the discrete exterior derivative is in a sense $\textit{exact}$ on the manifold (\cite{craneDDG}), the discrete Hodge-stars $\star_0$, $\star_1$ are only an approximation, which stems from the ambiguity of the two possible choices of a dual mesh. 
+    \\
+    The barycentric dual area of a vertex is simply $\frac{1}{3}$ the sum of the areas of the adjacent triangles, while the circumcentric dual takes a bit more work. However, in practice (\cite{discrete_exterior_calculus}) on a Delaunay triangulation, the circumcentric dual area is well approximated by the barycentric dual area, and so this is also the method used in this thesis.
+}
+With all the preceding definitions in place, the DEC Laplacian can now be obtained as the matrix $L \in \reals^{|V| \times |V|} $ and can be used as a drop-in replacement for finite-difference schemes.
 
-\subsubsection*{Extrinsic Representation}
-When given a triangle mesh,  and no metric tensor, it is most natural to assume that it represents an isometric immersion (or embedding if the mesh has no self-intersections).
-
-\subsubsection*{Intrinsic Representation}
-
-
-\subsubsection{Simplicial Complex}
-
+\example{Computing DEC laplacian of a Simple Mesh}{
+    Make this example. [TODO]
+}
 
 \ifdefined\COMPILINGFROMMAIN
 \else    
