@@ -5,23 +5,7 @@ import jax
 import jax.numpy as jnp
 import jax.scipy.integrate as inte
 from functools import partial
-
-
-@jax.jit
-def _length_element(t, g1, g2, p1, p2):
-    diff = p1 - p2
-    return jnp.sqrt(diff.T @ g1 @ diff * (1 - t) + diff @ g2 @ diff * t)
-
-
-@partial(jax.jit, static_argnums=(2,))
-def measure_distance(p1, p2, metric):
-    g1 = metric(p1)
-    g2 = metric(p2)
-    n = 20
-    length_elements = jax.vmap(lambda t: _length_element(t, g1, g2, p1, p2))(
-        jnp.linspace(0, 1, n)
-    )
-    return inte.trapezoid(y=length_elements, dx=1 / n)
+from discrete_exterior_calculus.metrics import measure_distance
 
 
 def should_subdivide(l1, l2, l3):
@@ -34,13 +18,16 @@ def should_subdivide(l1, l2, l3):
     if not is_triangle:
         return True
 
-    # TO ENSURE MINIMUM AREA
-    s = (l1 + l2 + l3) / 2
-    area = (s * (s - l1) * (s - l2) * (s - l3)) ** 0.5
-    if area > 0.1:
-        return True
+    # # TO ENSURE MINIMUM AREA
+    # s = (l1 + l2 + l3) / 2
+    # area = (s * (s - l1) * (s - l2) * (s - l3)) ** 0.5
+    # if area > 0.1:
+    #     return True
 
-    if longest >= shortest * 2:
+    # if longest >= shortest * 2:
+    #     return True
+
+    if longest >= 0.1:
         return True
 
     return False
@@ -101,16 +88,20 @@ def triangulate_mesh_with_edge_distances(mesh: DEC.Mesh, distance_map: dict):
         # print("node:")
 
 
-def add_distances_to_mesh_with_metric(mesh: DEC.Mesh, metric):
-    """Returns new faces and vertices after subdividing the mesh according to the edge lengths in distance_map"""
+def add_distances_to_mesh_with_metric(
+    local_coordinate_mesh: DEC.Mesh, metric, max_subdivs: int = 1000
+):
+    """Returns new faces and vertices after subdividing the mesh according to the edge lengths induced by the metric"""
     opposing_nodes_dict = {}
 
-    for edge_, opposing in zip(mesh.edges, mesh.opposing_vertices):
+    for edge_, opposing in zip(
+        local_coordinate_mesh.edges, local_coordinate_mesh.opposing_vertices
+    ):
         a, b = edge(*edge_)
         opposing_nodes_dict[(a, b)] = opposing
 
-    faces = {tuple(face) for face in mesh.faces}
-    vertices = list(mesh.vertices[:, [0, 2]])
+    faces = {tuple(face) for face in local_coordinate_mesh.faces}
+    vertices = list(local_coordinate_mesh.vertices[:, [0, 2]])
 
     data = {}
     for face in faces:
@@ -125,6 +116,8 @@ def add_distances_to_mesh_with_metric(mesh: DEC.Mesh, metric):
     i = 0
 
     while triangles_to_visit:
+        if i >= max_subdivs:
+            break
         faces = triangles_to_visit.pop(0)
 
         if not triangle_exists(data, faces):
@@ -165,8 +158,7 @@ def add_distances_to_mesh_with_metric(mesh: DEC.Mesh, metric):
             other_corner_node = None
 
         i += 1
-        if i >= 40:
-            break
+
         t = 0.5
         vertices.append(vertices[medium_node] * (1 - t) + vertices[short_node] * (t))
 

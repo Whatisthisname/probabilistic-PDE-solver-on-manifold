@@ -5,8 +5,8 @@
     let colorScale; // To store the current color scale
     let currentMinScalar, currentMaxScalar; // To store current min and max scalar values
     let currentProfileName; // To store the current profile name
-    let currentTimeIndex; // For time-dependent profiles
 
+    console.log("Hello from script.js");
 
     function init() {
         // Create the scene and set the camera
@@ -30,7 +30,8 @@
         });
 
 
-        camera = new THREE.PerspectiveCamera(75, viewport.offsetWidth / viewport.offsetHeight, 0.01, 1000);
+        // camera = new THREE.PerspectiveCamera(75, viewport.offsetWidth / viewport.offsetHeight, 0.01, 1000);
+        camera = new THREE.OrthographicCamera(-viewport.offsetWidth / viewport.offsetHeight, viewport.offsetWidth / viewport.offsetHeight, 1, -1);
         camera.position.x = 1;
         camera.position.y = 1;
         camera.position.z = 1;
@@ -41,6 +42,7 @@
         viewport.appendChild(renderer.domElement);
 
         // Add OrbitControls to allow interactive camera manipulation
+
         controls = new THREE.OrbitControls(camera, renderer.domElement);
 
         // Handle window resize
