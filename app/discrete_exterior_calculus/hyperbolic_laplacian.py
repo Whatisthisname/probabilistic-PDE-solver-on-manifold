@@ -117,18 +117,9 @@ def compute_neg_laplacian(mesh, faces_and_lengths):
         np.array(faces_and_lengths).reshape(-1, 6)
     )
 
-    # get quantiles of areas
-    print("quantiles of areas")
-    print(np.quantile(areas, [0.00, 0.25, 0.5, 0.75]))
     star0 = compute_star0(areas, mesh.tri_map)
 
-    print("quantiles of star0")
-    print(np.quantile(star0.diagonal(), [0.00, 0.25, 0.5, 0.75]))
-
     star1_circ = compute_star1_circ(mesh.faces, mesh.edges, cotangents)
-
-    print("quantiles of star1_circ")
-    print(np.quantile(star1_circ.diagonal(), [0.00, 0.25, 0.5, 0.75]))
 
     d0 = mesh.compute_d0()
     laplacian = -spsla.spsolve(star0, d0.T @ star1_circ @ d0)

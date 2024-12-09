@@ -1,4 +1,4 @@
-\input{../header.txt}
+\input{../header.tex}
 \def\COMPILINGFROMMAIN{}
 \begin{document}
 
@@ -7,17 +7,43 @@
 \date{\today}
 \maketitle
 
+
 \begin{abstract}
 In this thesis we discuss details of implementing a probabilistic numerical solver for partial differential equations whose spatial domain is not a vector space. We cover topics including the concept of the metric tensor, embeddings of manifolds, mesh representations and refinement, discrete differential operators, ODEs, PDEs, and SDEs, numerical linear algebra, state space models, the (extended) Kálmán-filter and -smoother, and numerical stability. We conclude with experiments that test the efficiency of physically informed prior solutions in non-euclidean domains.
 
 We have structured the thesis as a guide on how to implement and follow the results, and we try to motivate the steps to the best of our efforts.
 \end{abstract}
 
-\section{Overview}
+\ref{sec:manifolds}
+\ref{sec:pde}
+\ref{sec:prior}
+\ref{sec:residual}
+\ref{sec:matrix_exponential}
+\ref{sec:kalman_filter}
+
+\section{Overview}\label{sec:overview}
 \input{../summary/summary.tex}
 
-\section{Riemannian Manifolds}
+\section{Riemannian Manifolds}\label{sec:manifolds}
 \input{../geometry/geometry.tex}
+
+\section{Partial Differential Equations}\label{sec:pde}
+\input{../pde/pde.tex}
+
+\section{Prior Distribution}\label{sec:prior}
+\input{../prior/prior.tex}
+
+\section{Information Operator}\label{sec:residual}
+\input{../information_op/information_op.tex}
+
+\section{Discretizing Prior}\label{sec:matrix_exponential}
+\input{../matrix_exponential/matrix_exponential.tex}
+
+\section{Kalman Filter}\label{sec:kalman_filter}
+\input{../kalman_filter/kalman_filter.tex}
+
+\section{Experiments}
+\input{../experiments/experiments.tex}
 
 \section{Results}
 Use the \texttt{figure*} or \texttt{table*} environments for figures or tables spanning both columns.
@@ -26,13 +52,13 @@ Use the \texttt{figure*} or \texttt{table*} environments for figures or tables s
     \centering
     \includegraphics[width=0.8\textwidth]{../images/smiley.png}
     \caption{A wide figure spanning both columns.}
-    \label{fig:wide_figure}
+    \label{smileybotch}
 \end{figure*}
 
 \section{Conclusion}
-This concludes the example.
+Smiley er sej og er figur \ref{smileybotch}
 
-\bibliographystyle{plainnat}
-\bibliography{references}
+\cite{example2024}
+\printbibliography
 
 \end{document}

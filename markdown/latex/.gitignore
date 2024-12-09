@@ -11,6 +11,9 @@
 *.toc
 *.bbl
 *.blg
+*.bcf
+*.run.xml
+*.bbl-SAVE-ERROR
 
 # Ignore PDF output
 *.pdf
