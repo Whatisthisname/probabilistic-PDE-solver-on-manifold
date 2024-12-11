@@ -6,15 +6,19 @@
 
 On a very high level, these are the steps necessary to build a probabilistic numerical solver on a 2-manifold. Each section will be explained in more detail in the following chapters.
 
-\subsection*{Discretize the 2-Manifold to a Triangle Mesh, build a finite-differences matrix $L$}
-In chapter \ref{sec:manifolds}, we start off with a Riemannian 2-manifold $\mathcal{M}$, represented either through a metric tensor and coordinate chart, or through an already discretized representation as a triangle mesh. With our manifold triangle mesh,  we then resort to the tools of discrete exterior calculus to compute the cotan-Laplacian $L$ which approximates the Laplacian operator on the manifold. Basic necessary concepts of all will be covered.
-\subsection*{Discretize the PDE to a System of ODEs}
+\section{Prerequisites}
+\subsection*{Discretize the PDE to a System of ODEs, Method of Lines}
 Chapter \ref{sec:pde} assumes that we have a time-evolving PDE such as the heat equation $$\frac{\partial}{\partial t}u(t,\mathbf{x}) = -\Delta u(t,\mathbf{x})$$ We choose a timespan in which the PDE is to be simulated, $\mathcal{T} = [0, T]$, an initial condition $u(\mathbf{x}, 0)$ and potentially boundary conditions for all times $t\in \mathcal{T}$. We convert the PDE into a system of ODEs by discretizing the spatial domain into finite sets of points $V$. We denote the spatial restriction as $$u_V(t) := \left . u(x,t)\right|_{x=V} \in \reals^{|V|}$$ The discretized domain will require the cotan-Laplacian $L \in \reals^{|V|\times |V|}$. Depending on the representation of the manifold, there are different ways to compute it.  If a metric tensor and coordinate chart are provided, compute and intrinsic triangulation of the domain from points $V$. If just a mesh with vertices $V$ is provided, assume it is an isometric immersion. As an example, with $L$, the linear heat equation then becomes $$\frac{\text{d}}{\text{d} t}u_V(t) = -Lu_V(t)$$ which is now a system of ODEs, because there are no partial derivatives. Basic PDE and ODE theory is covered.
+\subsection*{Discretize the 2-Manifold to a Triangle Mesh, obtain a laplace matrix $L$}
+In chapter \ref{sec:manifolds}, we start off with a Riemannian 2-manifold $\mathcal{M}$, represented either through a metric tensor and coordinate chart, or through an already discretized representation as a triangle mesh. With our manifold triangle mesh, we then resort to the tools of discrete exterior calculus to compute the cotan-Laplacian $L$ which approximates the Laplacian operator on the manifold. Basic necessary concepts of all will be covered.
+
+\section{Building a Probabilistic Solver of PDEs on Manifolds}
+\subsection*{Probabilistic Numerical Solver of ODE and PDE}
+With the prerequisites out the way, we show how to build a probabilistic solver is.
 \subsection*{Define a Prior Distribution}
 Chapter \ref{sec:prior} covers prior distributions. Based on the system of ODEs, we may select a prior Gauss-Markov process distribution $\mathcal{GP}$ that jointly models the solution function $u_V$ and its first $q\geq 1$ time-derivatives restricted to spatial points $V$. $q$ must be chosen to be at least as high as the order of the PDE. Specifically, this means we have a distribution over single-input (time) multi-output (scalar value and derivatives at spatial points) function distribution: $$\vec{U}_V :=\begin{bmatrix} U_V & \frac{\text{d}}{\text{d} t} U_V & \cdots & \frac{\text{d}^q}{\text{d} t^q} U_V\end{bmatrix}^{\intercal} \sim \mathcal{GP}$$ Again, we will cover the necessary concepts of stochastic processes.
-\subsection*{Extracting Information about the process with the Information Operator}
-Based on the system of ODEs, we will in chapter \ref{sec:residual} define the residual operator $R(\vec{u}_V)(t) \in \reals^{|V|}$. Taking as an example again the previous linear heat equation, we define $$R(\vec{u}_V)(t) = \frac{\text{d}}{\text{d} t}u_V(t) + L u_V(t)$$ motivated by the relation $$R(\vec{u}_V)(t) = \mathbf{0} \iff u_V(t) = -Lu_V(t)$$ An exact solution to the PDE would yield $\mathbf{0}$ for all timesteps. We will cover also other types of information operators.
-\subsection*{Discretizing the Prior in Time, Method Of Lines}
+
+\subsection*{Discretizing the Prior in Time}
 In chapter \ref{sec:matrix_exponential} we further discretize the problem by considering the function distribution $\mathcal{GP}$ only at finite equispaced timesteps $$\mathbb{T} = \{0, h, 2h, 3h, \dots\, T\}$$ 
 By our choice of a Gauss-Markov prior, the marginal distributions at two different times will be multivariate gaussian and independent given an intermediate times between the pair. Using the conditional independence structure of the prior, factor the joint distribution into the product of a gaussian prior $$\vec{U}_V(0) \sim \mathcal{N}(\vec{u}_V(0), \Sigma_0)$$ and multiple 1-step recurrence relation of the form $$\vec{U}_V(t+1) \;|\; \vec{u}_V(t) \sim \mathcal{N}(A\vec{u}_V(t), \Sigma)$$ 
 resulting in factorized joint distribution across all times 
@@ -24,9 +28,21 @@ resulting in factorized joint distribution across all times
     \mathcal{N}(\vec{u}_V(0), \Sigma _0)\prod_{t\in \mathbb{T}} \mathcal{N}(A\vec{u}_V(t), \Sigma)
 \end{align*}
 This is an instance of a Linear Gaussian Model, given computable parameters $A, \Sigma$.
-\subsection*{Probabilistic Numeric Solution: Posterior Distribution}
+
+\subsection*{Posterior Distribution}
 Chapter \ref{sec:kalman_filter} uses the previous joint distribution and computes the posterior joint distribution over the solution to the PDE as $$P(\vec{u}_V(0), \vec{u}_V(h), \dots, \vec{u}_V(T)) \;\Big| \; (u_V(0), \Sigma_0) \; \cup \; \{R(\vec{U}_V)(t) = 0 \; \forall t \in \mathbb{T}\}$$ This can be computed using the Kalman-filter and -smoother in time $O(|\mathbb{T}||V|^3(1+q)^3)$, which is linear in time, notably. From the posterior joint distribution, quantities of interest (mean, covariance, derivatives) can be extracted through simple indexing.
 There are many tricks to implementing an efficient and stable version of the Kalman-filter and -smoother, a few of which will be covered.
+
+\subsection*{Extracting Information about the process with the Information Operator}
+Based on the system of ODEs, we will in chapter \ref{sec:residual} define the residual operator $R(\vec{u}_V)(t) \in \reals^{|V|}$. Taking as an example again the previous linear heat equation, we define $$R(\vec{u}_V)(t) = \frac{\text{d}}{\text{d} t}u_V(t) + L u_V(t)$$ motivated by the relation $$R(\vec{u}_V)(t) = \mathbf{0} \iff u_V(t) = -Lu_V(t)$$ An exact solution to the PDE would yield $\mathbf{0}$ for all timesteps. We will cover also other types of information operators.
+
+\subsection*{Contribution: Building a Laplacian without a mesh, from just a Riemannian Metric}
+Here we show how build a discrete differential operator for subsequent use in the Method of Lines. We contribute an algorithm that builds an instrinsic triangulation of a manifold using just the metric tensor.
+\subsubsection*{Experiments}
+
+\subsection*{Contribution: Solving PDEs more efficiently using Priors informed by the manifold structure}
+
+\subsubsection*{Experiments}
 
 
 \ifdefined\COMPILINGFROMMAIN

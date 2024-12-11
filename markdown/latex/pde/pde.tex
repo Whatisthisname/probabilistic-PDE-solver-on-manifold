@@ -205,14 +205,14 @@ The sparse of these high order system matrices will play a big part in later sec
 
 \example{MOL on different PDEs and their 1st Order ODE Representation}{
     In the following table, $\textbf{I}$ is the $n\times n$ identity matrix, and $\mathbf{0}$ the $n\times n$ zero matrix.
-    \begin{tabular}{c|c}
+    \hspace*{-2mm}\begin{tabular}{c|c|c}
         \hline 
-        Linear PDE & MOL Vector Field
+        Linear PDE & System Mat. & $\vec{u}$
         \\\hline \hspace*{2mm} & \hspace*{2mm} 
         % START
         \\$\frac{\partial}{\partial t}u = -\Delta u$ & $\begin{bmatrix}
             -L
-        \end{bmatrix} \begin{pmatrix}
+        \end{bmatrix}$ & $\begin{pmatrix}
             u
         \end{pmatrix}$
         \\ \hspace*{2mm} & \hspace*{2mm} 
@@ -222,7 +222,7 @@ The sparse of these high order system matrices will play a big part in later sec
         \\\hline \hspace*{2mm} & \hspace*{2mm} 
         \\$\frac{\partial^2}{\partial t^2}u = ku  -d\Delta \frac{\partial}{\partial t}u$ & $\begin{bmatrix}
             \textbf{0} & \textbf{I} \\ k\textbf{I} & -dL
-        \end{bmatrix} \begin{pmatrix}
+        \end{bmatrix}$ & $\begin{pmatrix}
             u \\ v
         \end{pmatrix}$
         \\ \hspace*{2mm} & \hspace*{2mm} 
@@ -234,8 +234,8 @@ The sparse of these high order system matrices will play a big part in later sec
         $\begin{bmatrix}
             \textbf{0} & \textbf{I} 
             \\ \textbf{0} & aL
-        \end{bmatrix} 
-        \begin{pmatrix}
+        \end{bmatrix}$ 
+        & $\begin{pmatrix}
             u \\ v
         \end{pmatrix}$
         \\ \hspace*{2mm} & \hspace*{2mm} 
@@ -248,8 +248,8 @@ The sparse of these high order system matrices will play a big part in later sec
             \textbf{0} & \textbf{I} & \textbf{0}
             \\\textbf{0} & \textbf{0} & \textbf{I}
             \\ L & \textbf{0} & \textbf{0}
-        \end{bmatrix} 
-        \begin{pmatrix}
+        \end{bmatrix}$ 
+        & $\begin{pmatrix}
             u \\ v_1 \\ v_2
         \end{pmatrix}$
         \\ \hspace*{2mm} & \hspace*{2mm} 
@@ -262,9 +262,9 @@ The sparse of these high order system matrices will play a big part in later sec
             \\\textbf{0} & \textbf{0} & \textbf{I} & \textbf{0}
             \\ \textbf{0} & \textbf{0} & \textbf{0} & \textbf{I}
             \\ L & \textbf{0} & \!\!a\textbf{I} \!\!& \textbf{0}
-        \end{bmatrix} \!
-        \begin{pmatrix}
-            u \\ v_1 \\ v_2
+        \end{bmatrix}$ \!
+        & $\begin{pmatrix}
+            u \\ v_1 \\ v_2 \\ v_3
         \end{pmatrix}$
         \\ \hspace*{2mm} & \hspace*{2mm} 
         % END
