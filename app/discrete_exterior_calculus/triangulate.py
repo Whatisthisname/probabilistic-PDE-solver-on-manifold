@@ -6,6 +6,7 @@ import jax.numpy as jnp
 import jax.scipy.integrate as inte
 from functools import partial
 from discrete_exterior_calculus.metrics import measure_distance
+import heapdict
 
 
 def should_subdivide(l1, l2, l3):
@@ -16,6 +17,7 @@ def should_subdivide(l1, l2, l3):
     is_triangle = longest < (medium + shortest)
 
     if not is_triangle:
+        print("Not a triangle")
         return True
 
     # # TO ENSURE MINIMUM AREA
@@ -24,10 +26,10 @@ def should_subdivide(l1, l2, l3):
     # if area > 0.1:
     #     return True
 
-    # if longest >= shortest * 2:
-    #     return True
+    if longest >= (shortest + shortest):
+        return True
 
-    if longest >= 0.1:
+    if longest >= 0.5:
         return True
 
     return False
@@ -112,13 +114,26 @@ def add_distances_to_mesh_with_metric(
 
         add_triangle_with_opposing_sidelengths(data, face, tuple(lengths))
 
-    triangles_to_visit = list(data.keys())
+    def score(lengths):
+        l1, l2, l3 = lengths
+        # longest = max(l1, l2, l3)
+        # shortest = min(l1, l2, l3)
+        # medium = l1 + l2 + l3 - longest - shortest
+
+        # not_triangle = 1 - int(longest > (medium + shortest))
+        # return 100 * not_triangle
+        return 1 / sum(lengths)
+
+    triangles_to_visit = heapdict.heapdict()
+    for face, lengths in data.items():
+        triangles_to_visit[face] = score(lengths)
+
     i = 0
 
     while triangles_to_visit:
         if i >= max_subdivs:
             break
-        faces = triangles_to_visit.pop(0)
+        faces, _ = triangles_to_visit.popitem()
 
         if not triangle_exists(data, faces):
             continue
@@ -162,8 +177,16 @@ def add_distances_to_mesh_with_metric(
         t = 0.5
         vertices.append(vertices[medium_node] * (1 - t) + vertices[short_node] * (t))
 
+        short_new_length = measure_distance(
+            vertices[new_node],
+            vertices[short_node],
+            metric,
+        )
+        medium_new_length = long_side - short_new_length
+
         # FIX THE OPPOSING TRIANGLE:
         if other_corner_node is not None:
+            print("not none")
             other_tri = (medium_node, short_node, other_corner_node)
             o_short_side, o_medium_side, o_long_side = (
                 get_triangle_with_opposite_sidelengths(data, other_tri)
@@ -200,22 +223,20 @@ def add_distances_to_mesh_with_metric(
             add_triangle_with_opposing_sidelengths(
                 data,
                 (medium_node, new_node, other_corner_node),
-                (other_new_length, o_medium_side, long_side / 2),
+                (other_new_length, o_medium_side, medium_new_length),
             )
+            triangles_to_visit[
+                tuple(np.sort([medium_node, new_node, other_corner_node]))
+            ] = score((other_new_length, o_medium_side, medium_new_length))
 
             add_triangle_with_opposing_sidelengths(
                 data,
                 (short_node, new_node, other_corner_node),
-                (other_new_length, o_short_side, long_side / 2),
+                (other_new_length, o_short_side, short_new_length),
             )
-
-            triangles_to_visit.append(
-                tuple(np.sort([medium_node, new_node, other_corner_node]))
-            )
-
-            triangles_to_visit.append(
+            triangles_to_visit[
                 tuple(np.sort([new_node, short_node, other_corner_node]))
-            )
+            ] = score((other_new_length, o_short_side, short_new_length))
 
         opposing_nodes_dict[edge(new_node, medium_node)] = list.copy(
             opposing_nodes_dict[edge(medium_node, short_node)]
@@ -224,15 +245,9 @@ def add_distances_to_mesh_with_metric(
             opposing_nodes_dict[edge(medium_node, short_node)]
         )
 
-        # new_length = np.round(0.5 * (short_side + medium_side), 4)
-        short_mid_length = measure_distance(
+        corner_new_length = measure_distance(
             vertices[new_node],
-            vertices[short_node],
-            metric,
-        )
-        medium_mid_length = measure_distance(
-            vertices[new_node],
-            vertices[medium_node],
+            vertices[corner_node],
             metric,
         )
 
@@ -243,20 +258,24 @@ def add_distances_to_mesh_with_metric(
         opposing_nodes_dict[edge(short_node, corner_node)].append(new_node)
         del opposing_nodes_dict[edge(medium_node, short_node)]
 
-        triangles_to_visit.append(tuple(np.sort([new_node, medium_node, corner_node])))
+        triangles_to_visit[tuple(np.sort([new_node, medium_node, corner_node]))] = (
+            score([medium_new_length, medium_side, long_side / 2])  # TODO investigate
+        )
 
-        triangles_to_visit.append(tuple(np.sort([new_node, short_node, corner_node])))
+        triangles_to_visit[tuple(np.sort([new_node, short_node, corner_node]))] = score(
+            [short_new_length, short_side, long_side / 2]
+        )
 
         add_triangle_with_opposing_sidelengths(
             data,
             (medium_node, new_node, corner_node),
-            (medium_mid_length, medium_side, long_side / 2),
+            (corner_new_length, medium_side, medium_new_length),
         )
 
         add_triangle_with_opposing_sidelengths(
             data,
             (short_node, new_node, corner_node),
-            (short_mid_length, short_side, long_side / 2),
+            (corner_new_length, short_side, short_new_length),
         )
 
         remove_triangle(data, faces)

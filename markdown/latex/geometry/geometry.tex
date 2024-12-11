@@ -138,12 +138,12 @@ Even for many seemingly simple cases of $g$ and $r$ this integral has no analyti
     x \\ y
     \end{bmatrix}\right) = \frac{1}{1- x^2 - y^2} \begin{bmatrix} 1 & 0 \\ 0 & 1\end{bmatrix}$$ with $\begin{bmatrix}
         x & y
-        \end{bmatrix}^\top$ as local cartesian coordinates within the unit-disc. The hyperbolic metric is used in the Poincaré disk model of the hyperbolic plane, which, unlike the sphere, is unbounded. It is also not isometrically embeddable in $\reals^3$ (Hilbert's Theorem). Subsets of it can however be embedded. The authors of \cite{shape_from_metric} give a method to embed a portion of the hyperbolic plane in $\reals^3$ and have a great visualization\footnote{For copyright reasons, we will have to make do with the surface of kale leaves, which is a common example of hyperbolic geometry in nature.}. 
+        \end{bmatrix}^\top$ as local cartesian coordinates within the unit-disc. The hyperbolic metric is used in the Poincaré disk model of the hyperbolic plane, which, unlike the sphere, is unbounded. It is also not isometrically embeddable in $\reals^3$ (Hilbert's Theorem). Subsets of it can however be embedded. The authors of \cite{shape_from_metric} give a method to embed a portion of the hyperbolic plane in $\reals^3$ and have a great visualization\footnote{For copyright reasons, we will have to make do with the surface of kale leaves, which is a common example of hyperbolic geometry in nature anyway.}. 
     \begin{center}
-        \includegraphics[width=1\columnwidth]{../images/hyperbolic_kale.png}
-        \captionof{figure}{Kale leaves. The veins of the leaf are approximately hyperbolic geodesics, which are the shortest paths between points on the leaf. Similarly to how an orange peel cannot be flattened to a sheet without tearing, the kale leaf cannot be flattened to a plane without folding in on itself. One has constant positive gaussian curvature, the other negative.}
+        \includegraphics[width=0.95\columnwidth]{../images/hyperbolic_kale.png}
+        \captionof{figure}{The surface of kale leaves is hyperbolic. The veins of the leaf are approximately geodesics, which are the shortest paths between points on the leaf. Similarly to how an orange peel cannot be flattened to a sheet without tearing, the kale leaf cannot be flattened to a plane without folding in on itself. One has constant positive gaussian curvature, the other negative.}
         \includegraphics[width=0.8\columnwidth]{../images/hyperbolic_space_tissot.png}
-        \captionof{figure}{Tissot Indicatrices shown on Poincaré disc model of the hyperbolic plane. It is not a mistake that the patches are circular - the metric is isotropic, meaning not depending on direction of travel. Note that in this figure the indicatrices are \textit{not} uniformly spaced like they were hemisphere.}
+        \captionof{figure}{Tissot Indicatrices shown on Poincaré disc model of the hyperbolic plane. The metric is isotropic, meaning not depending on direction of travel, so the patches are circular. Note that in this figure the indicatrices are \textit{not} uniformly spaced like they were on the hemisphere.}
     \end{center} 
 }
 \subsubsection*{Boundaries}
@@ -167,8 +167,8 @@ The extrinsic triangulation allows one to compute edge lengths from the norm of 
     $$0 < e_i < e_j + e_k$$
     $$0 < e_j < e_i + e_k$$
     $$0 < e_k < e_i + e_j$$
-    This is a strict version of the triangle inequality, ensuring that all lengths define valid nondegenerate triangles.
-    }
+    This is the strict variant of the triangle inequality, ensuring that all lengths define triangles that can be embedded in $\reals^2$ with non-zero area.
+}
 \noindent
 The advantages of intrinsic triangulations are explored in depth in \cite{sharp2021intrinsic}. The following are useful formulas for computing areas and angles of faces in an intrinsic triangulation.
 \example{Heron's Formula for calculating Areas of Faces}{
@@ -181,8 +181,11 @@ A good rule of thumb is that if a property cannot be computed from edge-lengths 
     Given again a face $(E_i, E_j, E_k)$, the cosine of the interior angle $\alpha$ opposite of edge $E_i$ can be computed as 
     $$\cos(\alpha) = \frac{e_j^2 + e_k^2 - e_i^2}{2e_je_k}$$
 }
+\example{Non-Planar Triangles and Triangle Inequality}{
+    A triple of edge-lengths violating the triangle inequality will result in a triangle that cannot be drawn in the plane TODO
+}
 \subsubsection*{Manifold Triangle Mesh}
-When given an extrinsic triangulation, it is most natural to assume that it represents an isometric immersion (or embedding if the mesh has no self-intersections) of a section of a 2-manifold. Furthermore, for a triangle mesh to represent a 2-manifold, there are some restrictions to how the faces can be connected. An edge must be associated with $n \in \{1, 2\}$ faces and a face cannot share an edge with itself, with the case $n=1$ is realized only at boundary faces. Mesh structures with $n>2$ can be permitted with some tricks that involve "inflating" the mesh (see \cite{nonmanifold_laplacian}), but we will not cover them here and work only with Manifold meshes.
+When given an extrinsic triangulation, it is most natural to assume that it represents an isometric immersion (or embedding if the mesh has no self-intersections) of a section of a 2-manifold. Furthermore, for a triangle mesh to represent a 2-manifold, there are some restrictions to how the faces can be connected. An edge must be associated with $n \in \{1, 2\}$ faces and a face cannot share an edge with itself, with the case $n=1$ is realized only at boundary faces. Mesh structures with $n>2$ can be permitted with some tricks that involve "inflating" the mesh (see \cite{nonmanifold_laplacian}), but we will not cover them here and work only with Manifold meshes. 
 \definition{Dual Mesh}{
     In an extrinsic triangulation, the dual of a triangle mesh is a new mesh ($V^\prime,\; F^\prime$) with 
     $$|V^\prime| = |F| \text{  and  }|F^\prime| = |V|$$
@@ -190,7 +193,7 @@ When given an extrinsic triangulation, it is most natural to assume that it repr
     \\
     In the dual mesh, two faces that share an edge $E_i$ in the original mesh will become two dual vertices connected by the dual edge $E_i^\prime$.
 }
-In an intrinsic triangulation, the mapping of vertices to dual faces and faces to dual vertices is the same, but the circumcenter and barycenter cannot be defined explicitly as there are no stored vertex coordinates. One must instead store the length of the dual edge. This length depends on the position of the vertices (barycenter vs circumcenter) and the edge lengths of the original mesh.
+In an intrinsic triangulation, the mapping of vertices to dual faces and faces to dual vertices is the same, but the circumcenter and barycenter cannot be defined explicitly as there are no stored vertex coordinates. One must instead store the length of the dual edge. This length depends on the position of the vertices (barycenter vs circumcenter) and the edge lengths of the original mesh. With intrinsic edge-flips \cite{sharp2021intrinsic}, one can build an intrinsic Delaunay triangulation, which guarantees that the circumcentric dual mesh has positive edge lengths. This leads to high numerical stability and well-conditioned matrices as described in \cite{intrinsic_laplacian}. In this thesis we stick to constructing good triangulations in the first place.
 \example{Choice of Dual Mesh}{
     The choice of dual will influence edge lengths and dual face areas (see following figures).
     \begin{center}
@@ -199,49 +202,75 @@ In an intrinsic triangulation, the mapping of vertices to dual faces and faces t
         For clarity, edges $(I, II)$ and $(B, C)$ are dual, while polygon $(I, II, III, IV, V, VI)$ is dual to vertex $C$.}
         \label{fig:barycentric_dual}
         \includegraphics[width=0.7\columnwidth]{../images/circumcentric.png}
-        \captionof{figure}{Circumcentric Dual mesh. Each dual vertex is placed at the circumcenter of the face. For obtuse triangles such as $\text{FGC}$, the barycenter $\text{V}$ can land outside the face. If the obtuse triangles have their respective circumcenters in the opposite triangle, the edge length is considered negative (not pictured). The circumenctric dual has the property that pairs of edges and dual edges are orthogonal. Contrast this with the barycentric dual above.}
+        \captionof{figure}{Circumcentric Dual mesh. Each dual vertex is placed at the circumcenter of the face. For obtuse triangles such as $\text{FGC}$, the circumcenter $\text{V}$ will land outside the face. If two neighboring obtuse triangles have their respective circumcenters in the opposite triangle each, the dual edge length must be considered negative for downstream purposes (not pictured). The circumcentric dual has the property that pairs of edges and dual edges are orthogonal. Contrast this with the barycentric dual above.}
         \label{fig:circumcentric_dual}
     \end{center}
-    By the use of intrinsinc edge-flips \cite{sharp2021intrinsic}, one can build an intrinsic Delaunay triangulation, which guarantees that the circumcentric dual mesh has positive edge lengths. This leads to high numerical stability and well-conditioned matrices as described in \cite{intrinsic_laplacian}. In this thesis we stick to constructing good triangulations in the first place.
 }
 \section*{Triangulating a 2-Manifold from its Metric Tensor}
 Given a Riemannian 2-Manifold $\big(\mathcal{M}, g\big)$ we will now describe a way to triangulate it. This is one of the contributions of the thesis. The triangulation will represent the intrinsic geometry - we will not be embedding it manifold into a space. The triangulation will result in a intrinsic triangle mesh, with only edge lengths and faces defined - no position in space.
 \\ 
-Let $g : C \to \reals^{2\times2}$. We will be triangulating the local-coordinate domain $C$ of the metric tensor $g$, but using the $g$ to gauge the properties (lengths, areas) of the triangles. The triangulation will thus satisfy the intrinsic properties of the manifold by encoding the metric tensor in the edges.
+Let $g : C \to \reals^{2\times2}$. We will be triangulating the local-coordinate domain $C$ of the metric tensor $g$, but using the $g$ to measure the properties (lengths, areas) of the triangles. The triangulation will be an intrinsic triangulation of the manifold by encoding the metric tensor in the edges and by having no reference to the ambient space.
 \\
-The algorithm can be described quite simply:
+\algorithmbox{Intrinsic Triangulation Setup}{
+    \textbf{Require as input:} $\vspace{1mm}$
+    \\$\mathbf{\Delta}_0$ : initial triangulation that partitions the coordinate space $C$. $\vspace{1mm}$
+    \\$g$: metric tensor mapping from any point in $C$ to a 2x2 matrix.$\vspace{1mm}$
+    \\$A_{\text{max}}$: desired upper bound on area of a triangle. $\vspace{1mm}$
+    \\$\rho$: desired max ratio of longest to shortest edge in each triangle, $\rho > e_{\text{long}}/e_{\text{short}}$. $\vspace{1mm}$ $\vspace{2mm}$
+    \\$\vspace{1mm}$\textbf{Procedure:} 
+    \\\texttt{for each edge} $E_i = (V_a, V_b)$ \texttt{in} $\mathbf{\Delta}_0$:
+    \\$\hspace*{10px}$ Parametrize the edge as
+        $$r_i(t) = (1-t)V_a + tV_b, \quad t \in [0,1].$$
+    \\$\hspace*{10px}$Store edge length $e_i$
+        $$e_i = \int_{0}^{1} \sqrt{r_i(t)^\top g(r_i(t)) r_i(t)} \, dt.$$
+    \texttt{for each triangle} $\Delta$ \texttt{in} $\mathbf{\Delta}_0$:
+    \\$\hspace*{10px}$ Mark the triangle for refinement if
+         \\$\hspace*{20px}$ $\Delta$ is not planar or
+         \\$\hspace*{20px}$ the ratio exceeds $\rho$ or
+         \\$\hspace*{20px}$ the exceeds $A_{\text{max}}$ $\vspace{2mm}$
 
-\section{Preparation phase}
-\begin{enumerate}
-    \item Require as input:
-    \begin{enumerate}
-        \item An initial triangulation $\mathbf{\Delta}_0$ of $C$ that partitions the whole space. The vertices should be spread uniformly in $C$ if there is no prior knowledge of the metric tensor.
-        \item The metric tensor $g$, mapping from any point in $C$ to a 2x2 matrix.
-        \item A maximum area $A_{\text{max}}$ for the each final triangle. This is a parameter that can be set to control the size of the triangles.
-        \item A maximum aspect ratio $\rho$ for which $\rho > e_{max}/e_{min}$, the ratio of longest to shortest edge in each triangle
-    \end{enumerate}
-    \item For each $E_i = (V_a, V_b)$ in $\mathbf{\Delta}_0$, parametrize it by 
-    $$r_i(t) = (1-t)V_a + tV_b \hspace{5mm} t\in[0,1]$$
-     and compute its length $e_i$ under the metric tensor $g$ (equation \ref{eq:length}) 
-    $$e_i = \int_{[0,1]} \sqrt{
-        r(t)^\top g(r(t)) r(t) } \; dt
-    $$
-    \item For each triangle, compute the area using Heron's formula, and the aspect ratio using the edge lengths. Compare to $A_{\text{max}}$ and $\rho$. If the area is too large, mark the triangle. If the aspect ratio is too large, mark the triangle.
-    \item Return triangles marked for refinement.
-\end{enumerate}
+    \textbf{Output:} $\vspace{2mm}$
+    \\$\mathbf{\Delta}_0$, computed edge lengths, and marked triangles.
+}            
+\definition{Local Triangle Naming scheme}{For a given triangle, refer to edges as $E_{\text{long}}, E_{\text{medium}}, E_{\text{short}}$ with the property $e_{\text{long}} \geq e_{\text{medium}} \geq e_{\text{short}}$. The vertex opposing $E_{\text{long}}$ edge is \underline{\textbf{C}}orner, the vertex on the shortest edge \underline{\textbf{S}}hort, and the remaining vertex on the medium-length edge \underline{\textbf{M}}edium. The vertex across $E_{\text{long}}$ in a potential adjacent triangle is \underline{\textbf{O}}pposite. \\In the figure below, let $T$=SMC be the reference triangle. We have $E_{\text{medium}}$=CM, $E_{\text{short}}$=CS, $E_{\text{long}}$=SM.
+\vspace{-5mm}\begin{center}    
+    \includegraphics[width=1\columnwidth]{../images/mesh_refine_1.png}
+\end{center}
+}
 \section{Iterative Refinement phase}
 While there are marked triangles, do the following:
 \begin{enumerate}
-    \item Take a marked triangle $T$ and remove the mark. Either the area or aspect ratio must be too large. Refer to edges of $T$ as $E_{\text{long}}, E_{\text{medium}}, E_{\text{short}}$ with the property $e_{\text{long}} \geq e_{\text{medium}} \geq e_{\text{short}}$.
-    \item Use longest-edge bisection\cite{longest_edge_bisection} to split $T$ into two triangles $T_1, T_2$ by bisecting the longest edge $E_{\text{long}}$.
+    \item From the marked triangles, take the triangle $T$ with the largest perimenter $T$ and remove its mark. We will bisect the longest edge.
+    \item We refer to the naming scheme. Create new vertex N at the Euclidean midpoint\footnote{One could also numerically determine the midpoint with the metric, but this simple approximation has proven itself to be enough. Later iterations of greedy subdivision can handle unlucky cases.} of $E_{\text{long}}$, resulting in new edges SN, NM. Compute lengths $|SN| = m(S, N)$ and infer $|NM| = E_{\text{long}} - |SN|$.  
+    \item Use longest-edge bisection\cite{longest_edge_bisection} to split both $T$ and the adjacent triangular face\footnote{We must also split the opposing triangle, because it would otherwise be a quadrilateral face with vertices SOMN. N would be referred to as a "dangling node".} $T^\prime$ opposite $E_{\text{long}}$ into two four triangles, cutting across $E_{\text{long}}$ through vertex $N$. This results in new edges CN and NO, whose lengths must both be computed as $m(C,N)$, $m(N,O)$.
+    \item  Inspect the four new triangles SON, NOM, NMC, and NCS for planarity, area, and aspect ratio, and mark approximately.
 \end{enumerate}
-\example{Mesh Refinement}{
-    If a triangle mesh is too coarse or is highly irregular, such as having a big aspect ratio or different sizes, the mesh must be refined or corrected. The first idea that might come to mind is to split one triangle into 2, 3 or 4 new triangles. This is a common approach, but there is an important consideration to make. After a split, a mesh might no longer consist of just triangles, but also quadrilaterals or even higher-order polygons. [SEE EXAMPLE]
+\example{Mesh Refinement and Bisection}{
+    This example covers 1-step refinement of a 4-vertex mesh with a two non-planar triangle faces. The path-lengths under the metric are marked on the edges.
     \begin{center}
-        \includegraphics[width=0.8\textwidth]{../images/graph.png}
-        \captionof{figure}{A wide figure spanning both columns.}
+        \vspace{-5mm}\includegraphics[width=1\columnwidth]{../images/mesh_refine_1.png}
+        \captionof{figure}{The initial mesh $\mathbf{\Delta}_0$ with edgelengths after preparation. Both triangles will be marked as they are non-planar. $T$=SMC will initially be picked for inital refinement as it has the largest perimeter.}
+        \includegraphics[width=1\columnwidth]{../images/mesh_refine_2.png}
+        \captionof{figure}{Edge SM is divided into two edges with vertex N, and new edge-lengths are computed. One length can be inferred from the other.}
+        \includegraphics[width=1\columnwidth]{../images/mesh_refine_3.png}
+        \captionof{figure}{Both triangles will be split by connecting their corners to the new vertex N, creating new edges CN and NO, whose lengths must both be computed. Finally, the new 4 triangles should be inspected and potentially marked for refinement.}
     \end{center}
 
+}
+\example{Hyperbolic Triangulation}{
+    We showcase the algorithm on the Poincaré disc model of $\mathbb{H}^2$ and compare with a hyperbolic tiling. As discussed in an earlier section, we cannot triangulate an unbounded domain, so we truncate the unit disc and look only within the disc of radius $0.97$. Algorithm run for $2000$ steps with $A_{\text{max}}$
+    \begin{center}
+        \includegraphics[width=0.95\columnwidth]{../images/hyperbolic_disc_before_refinement_some_labels.png}
+        \captionof{figure}{The initial input mesh, which is spread somewhat uniformly on the $0.97$-disc. Three triangles on the way to the border have their edge-lengths marked. This is the length under the hyperbolic metric. The outermost triangle does not satisfy the triangle inequality in this initial mesh, as $1.34 + 2.04 < 6.08$.}
+    \end{center}
+    \begin{center}
+        \includegraphics[width=0.94\columnwidth]{../images/hyperbolic_disc_after_refinement.png}
+        \captionof{figure}{The output of the algorithm, $\mathbf{\Delta}_{2000}$. Recall that all triangles represent approximately the same area, the hyperbolic expansion of space is clearly shown by the high triangle density.}
+    \end{center}
+    \begin{center}
+        \includegraphics[width=0.94\columnwidth]{../images/wiki_hyperbolic.png}
+        \captionof{figure}{Hyperbolic Tiling of the hyperbolic plane. All triangles are congruent. The triangles in our tiling are not congruent and will depend on the initial triangulation, but $A_{\text{max}}$ ensures that we make splits around the edge proportional to the area. Image from \cite{HyperbolicTiling}.}
+    \end{center}
 }
 \section*{Building a Laplacian from a Triangle Mesh}
 This section will describe how to discretize the differential geometry of manifolds. The goal is to approximate the continuous differential operators on a manifold with discrete operators on a mesh. The theory of Discrete Exterior Calculus (DEC) is a powerful tool for this purpose. Although the results we will present are not new, the theory is not widely known and is not covered in standard textbooks on numerical methods and is not part of the standard curriculum in computer science.
@@ -350,7 +379,7 @@ With the dual edges in place, we now move to the final two matrices in the DEC L
     Keep in mind that even permutations of a face are considered the same face, so $(V_a, V_b, V_c) = (V_c, V_a, V_b) = (V_b, V_c, V_a)$. Rows in $\text{d}_1$ are related to faces and will have three non-zero entries in $\{-1, 0, 1\}$, and each column, related to an edge, will have one or two non-zero entries (one if it is a boundary edge).
 }
 \definition{$\star_0$}{
-    The Hodge-star from $0$-forms in $(n\!\!=\!\!2)$-dimensional space $\reals^2$ is a matrix $\star_0 \in \reals^{|F|\times |V|}$ that takes a discretized differential $0$-form and returns a discretized $2$-form over the faces of the dual mesh. The matrix is a diagonal matrix that holds in each entry $${\star_1}_{ii} = \frac{1}{\Delta}$$ with $\Delta$ as the area of the associated dual face of the vertex. In the DEC Laplacian, $\star_0$ is inverted, but since the matrix is diagonal, this is a simple operation.
+    The Hodge-star from $0$-forms in $(n\!\!=\!\!2)$-dimensional space $\reals^2$ is a matrix $\star_0 \in \reals^{|F|\times |V|}$ that takes a discretized differential $0$-form and returns a discretized $2$-form over the faces of the dual mesh. The matrix is a diagonal matrix that holds in each entry $${\star_0}_{ii} = \frac{1}{A}$$ with $A$ as the area of the associated dual face of the vertex. In the DEC Laplacian, $\star_0$ is inverted, but since the matrix is diagonal, this is a simple operation.
 }
 \example{Dual Face Areas}{
     The discrete Hodge-star is still an open question and a topic of research (\cite{hodge}). While the discrete exterior derivative is in a sense $\textit{exact}$ on the manifold (\cite{craneDDG}), the discrete Hodge-stars $\star_0$, $\star_1$ are only an approximation, which stems from the ambiguity of the two possible choices of a dual mesh. 
@@ -359,7 +388,7 @@ With the dual edges in place, we now move to the final two matrices in the DEC L
 }
 With all the preceding definitions in place, the DEC Laplacian can now be obtained as the matrix $L \in \reals^{|V| \times |V|} $ and can be used as a drop-in replacement for finite-difference schemes.
 
-\example{Computing DEC laplacian of a Simple Mesh}{
+\example{Computing DEC Laplacian of a Simple Mesh}{
     Make this example. [TODO]
 }
 

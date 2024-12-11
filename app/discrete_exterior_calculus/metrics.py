@@ -83,6 +83,24 @@ def vertical_stretch(point: jnp.ndarray):
     return jnp.array([[0.5**2, 0], [0, 1**2]])
 
 
+def embed_to_slope(point):
+    return jnp.array([point[0], point[1], jnp.sqrt(2) * point[1]])
+
+
+# Example Usage
+# @jax.jit
+def projected_slope_metric(point):
+    jacobian = jax.jacobian(embed_to_slope)
+
+    return jacobian(point).T @ jacobian(point)
+
+    # return jax.lax.cond(
+    #     jnp.linalg.norm(point) == 0,
+    #     lambda: jnp.eye(2),
+    #     lambda: ,
+    # )
+
+
 def embed_to_bell(point):
     scale = jnp.array([[0.1, 0.1], [0.1, 0.8]]) * 0.5
     z = jnp.exp(-((jnp.linalg.norm(point @ jnp.linalg.inv(scale) @ point)) ** 2))
@@ -97,7 +115,7 @@ def projected_bell_metric(point):
     return jax.lax.cond(
         jnp.linalg.norm(point) == 0,
         lambda: jnp.eye(2),
-        lambda: jnp.linalg.inv(jacobian(point).T @ jacobian(point)),
+        lambda: jacobian(point).T @ jacobian(point),
     )
 
 

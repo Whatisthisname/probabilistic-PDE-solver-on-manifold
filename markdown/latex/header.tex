@@ -7,12 +7,31 @@
 \usetikzlibrary{calc}
 \usepackage{xcolor}
 \usepackage{caption}
+\usepackage{algorithm}
+\usepackage{algpseudocodex}
+\usepackage{listings}
+
+\tcbuselibrary{listingsutf8}
 \usepackage{microtype}
 \usepackage{blindtext}
 \usepackage{bookmark}
 \usepackage{breqn}
 \usepackage[backend=biber,style=numeric]{biblatex} % 
 \addbibresource{../references.bib}
+
+% Define style for the listings environment
+\lstdefinestyle{mystyle}{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    escapeinside={(*@}{@*)}, % Allows math mode within listings
+    numbers=left,
+    numberstyle=\tiny,
+    frame=single,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red}
+}
+
 
 \def\reals{\mathbb{R}}
 % Define the custom definition box and command
@@ -33,7 +52,7 @@
     enhanced jigsaw,
     title=Definition: {#1},         % Title passed as the first argument
     colupper=black,  % Ensure proper content handling
-    pad at break*=2pc,
+    pad at break*=1pc,
     overlay first and middle={
         \coordinate (A1) at ($(interior.south east) + (-10pt,5pt)$);
         \coordinate (C1) at ($(interior.south east) + (-6pt,7.5pt)$);
@@ -80,7 +99,7 @@
     \noindent
 }
 
-\newtcolorbox{myalgorithm}[2][]{%
+\newtcolorbox{algobox}[2][]{%
     text width=0.95\columnwidth,
     before=\vspace{1mm}, 
     after=\vspace{1mm}, 
@@ -103,11 +122,11 @@
     }
 }
 
-\newcommand{\algorithm}[2]{%
-    \noindent%
-    \begin{myalgorithm}[#1]%
+\newcommand{\algorithmbox}[2]{%
+\noindent%
+    \begin{algobox}[#1]%
     .#2%
-    \end{myalgorithm}%
+    \end{algobox}%
     \noindent
 }
 %%%%HEADER
