@@ -25,9 +25,9 @@ def perform_matrix_fraction_decomposition(SDE_coef, SDE_noise, delta_time):
 
     A = expd[:state, :state]
 
-    solution = expd @ jnp.block([[jnp.zeros((state, state))], [jnp.eye(state)]])
-
-    Q = solution[:state, :state] @ A.T
+    # solution = expd @ jnp.block([[jnp.zeros((state, state))], [jnp.eye(state)]])
+    # Q = solution[:state, :state] @ A.T
+    Q = expd[:state, state:] @ A.T
 
     return A, 0.5 * (Q + Q.T)
 

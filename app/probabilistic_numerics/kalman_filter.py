@@ -40,7 +40,7 @@ def solve_nonlinear_IVP(
     derivatives: int,
     n_solution_points: int,
     delta_time: float,
-    prior_type: Literal["iwp", "heat", "wave"],
+    prior_type: Literal["iwp", "heat", "wave", "all"],
     observation_function,
     observation_uncertainty: jnp.array,
     update_indicator,
@@ -56,6 +56,13 @@ def solve_nonlinear_IVP(
     if prior_type == "heat":  # place prior matrix in bottom right
         SDE_coef = SDE_coef.at[-state_size:, -state_size:].set(prior_matrix)
     elif prior_type == "wave":  # place prior matrix in left of bottom right
+        SDE_coef = SDE_coef.at[-state_size:, -2 * state_size : -state_size].set(
+            prior_matrix
+        )
+    elif (
+        prior_type == "all"
+    ):  # place prior matrix in left of bottom right and bottom right
+        SDE_coef = SDE_coef.at[-state_size:, -state_size:].set(prior_matrix)
         SDE_coef = SDE_coef.at[-state_size:, -2 * state_size : -state_size].set(
             prior_matrix
         )
@@ -107,6 +114,23 @@ def solve_nonlinear_IVP(
         reverse_parameters,
         n_samples=n_samples,
     )
+
+    # print(smooth_chol_covs.shape)s
+    # print(smooth_means.shape, last_filtered.mean.shape)
+    # smooth_means = jnp.concatenate(
+    #     [smooth_means[1:], last_filtered.mean.reshape(1, -1)], axis=0
+    # )
+    # smooth_chol_covs = jnp.concatenate(
+    #     [
+    #         smooth_chol_covs[1:],
+    #         last_filtered.chol_cov.reshape(
+    #             1, state_size * (1 + q), state_size * (1 + q)
+    #         ),
+    #     ],
+    #     axis=0,
+    # )
+
+    # print(smooth_means)
 
     stds = jnp.sqrt(
         jnp.diagonal(

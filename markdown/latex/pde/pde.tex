@@ -107,10 +107,10 @@ Dirichlet BCs amount to "pinning" the solution to a specific value at the bounda
         \frac{\partial}{\partial t}u(t, x) &= f(\cdot, \dots, \cdot ) & x\in \mathcal{M}
         \\
         \nabla_x u(t, x)^\top n(x) &= d(x) & x\in \partial\mathcal{M}
-    \end{align*}  TODO CHECK
+    \end{align*}
 }
 Neumann BCs are a bit less intuitive, but allow one to set the "slope" at the boundary.
-One simple instance of a PDE is the heat equation, which we will return to as a running example. It is defined with the Laplace operator, a differential operator involving partial derivatives. 
+\\A simple instance of a PDE is the heat equation, which we will return to as a running example. It is defined with the Laplace operator, a differential operator involving partial derivatives. 
 \example{Heat Equation on $(0,1)\subset \reals$}{
     The heat equation describes the evolution of temperature $u(t, \mathbf{x})$ at a point $\mathbf{x}$ and time $t$.
     \begin{align}\label{eq:heat_equation}
@@ -119,15 +119,15 @@ One simple instance of a PDE is the heat equation, which we will return to as a 
     $-\Delta u(t, x)$ becomes large when $u(t, \mathbf{x})$ is generally colder than the average temperature in the neighborhood of $\mathbf{x}$ and vice versa. The heat equation then states that each point should move towards the average local temperate. When $t\to\infty$, each point in $u(\mathbf{x}, t)$ will become the average of its neighboring points.
     \\For one dimension, the heat equation becomes
     $$\frac{\partial}{\partial t}u(t, x) = -\frac{\partial^2}{\partial x^2}u(t, x)$$
-    \begin{center}     TODO FIX PLOT YLABEL SPACE
+    \begin{center}
         \includegraphics[width=1\columnwidth]{../images/1D_heat.png}
         \captionof{figure}{Numerical solution of the heat equation on $(0,1)\subset \reals$, with Dirichlet BCs $u(0, 0)=u(0, 1)=0$. The solution is shown at four curated timesteps. As time increases, the temperature distribution gets smoother, until it reaches $0$. Since the temperature moves towards the average, and the boundary is fixed at zero, the temperature must go to zero.}
         \label{fig:heat_1d}
     \end{center}
 }
 \subsection{Method of Lines}
-The challenge with ODEs was the continuous parameter $t$, which we overcame by discretizing across the temporal dimension. However, our PDEs now additionally depend on continuous spatial parameters $\mathbf{x}$. The Method of Lines (MOL) \cite{mol} works by converting the PDE to a system of ODEs, for which existing ODE solvers can be used. To convert to a system of ODEs, the only continuous parameter $u$ may depend on is $t$. By discretizing space into finite set of points $\mathbb{X} = (\mathbf{x}_1, \dots, \mathbf{x}_n)$, the continuous spatial input is been reduced to discrete indexing into $n$-vector $u(t)$
-$$u(t) = \begin{bmatrix}
+The challenge with ODEs was the continuous parameter $t$, which we overcame by discretizing across the temporal dimension. However, our PDEs now additionally depend on continuous spatial parameters $\mathbf{x}$. The Method of Lines (MOL) \cite{mol} works by converting the PDE to a system of ODEs, for which existing ODE solvers can be used. To convert to a system of ODEs, the only continuous parameter $u$ may depend on is $t$. By discretizing space into finite set of points $\mathbb{X} = (\mathbf{x}_1, \dots, \mathbf{x}_n)$, the continuous spatial input is been reduced to discrete indexing into $n$-vector $\mathbf{u}(t)$
+$$\mathbf{u}(t) = \begin{bmatrix}
     u(t, \mathbf{x}_1), \dots, u(t, \mathbf{x}_n)
 \end{bmatrix}^\top$$ 
 containing the solution at each of the collocation points. However, having discretized space into a countable set of points, the differential operators acting on the spatial dimension are no longer defined. 
@@ -137,30 +137,43 @@ containing the solution at each of the collocation points. However, having discr
 }
 
 \definition{Finite Difference Methods}{
-    Finite Differences (FD) methods approximate differential operators from finite points of space. Differential operators are defined through limits, but with a finite number of spatial points, the limit must be approximated.
-    This yields finite difference operators, which can be applied to functions sampled at the specific points to approximate their spatial derivative.
+    Finite Differences (FD) methods approximate differential operators from regularly spaced finite points $\mathbb{X}$ of space. Standard differential operators are defined through limits, but with a finite number of spatial points, the limit must be approximated.
+    This yields finite difference operators, which can be applied to a function evaluated at the same points $\mathbb{X}$ to approximate its spatial derivative in theses points.
     \\ 
-    Like continuous differential operators, FD operatros are only defined on the interior of the domain. Supplying boundary conditions is therefore still necessary.
+    Like continuous differential operators, FD operators are only guaranteed to be defined on the interior of the domain. Supplying boundary conditions is therefore still necessary.
 }
-For linear differential operators the finite difference method will also be linear and can thus be written as a matrix. The exact form of the FD method depends on the discretization. In Euclidean space, rectangular grids yield simple formulas depending on the grid-spacing. On curved manifolds the grid-method breaks down. The methods from Discrete Exterior Calculus (ch. \ref{sec:manifolds}) give formulas for FD operators on discretized manifolds (triangle meshes). 
-\example{Finite Differences in One Dimension}{
-    In one dimension, from a finite set of collocation points $$\mathbb{X} = (x_1<\dots<x_n<x_{n+1}) \subset (0, 1)$$ one can approximate the first derivative of $u: (0, 1) \to \reals$ on the interior $x_i$ with the central difference 
-    $$\frac{\partial}{\partial x}u(x_i) \approx \frac{u(x_{i+1}) - u(x_i)}{x_{i+1} - x_i}$$ 
-    This formula is not valid for point $x_{n+1}$ at one end of the boundary. When all points are ordered and equidistant and with distance $h$, this can be expressed as matrix $D\in \reals^{n\times n}$ acting on the vector of samples $\mathbf{u}$:
-    $$D\mathbf{u} = \frac{1}{h}
+For linear differential operators the finite difference method will also be linear and can thus be written as a matrix. The exact form of the FD method depends on the discretization. In Euclidean space, rectangular grids yield simple formulas depending on the grid-spacing. On curved manifolds however, the grid-method breaks down. The methods from Discrete Exterior Calculus (ch. \ref{sec:manifolds}) give formulas for FD operators on discretized manifolds (triangle meshes). 
+\example{1D Finite Differences, Gradient}{
+    In one dimension, from a finite set of collocation points $$\mathbb{X} = (x_1<\dots<x_n) \subset (0, 1)$$ spaced $h$ apart, one can approximate the first derivative of $u: (0, 1) \to \reals$ on the interior $x_i$ with the central difference 
+    $$\frac{\partial}{\partial x}u(x_i) \approx \frac{u(x_{i+1}) - u(x_{i-1})}{x_{i+1} - x_{i-1}} = \frac{u(x_{i+1}) - u(x_{i-1})}{2h}$$ 
+    This formula breaks down for points $x_1$ and $x_n$ at the boundary, for which boundary conditions must be incorporated into the matrix. We will choose Dirichlet BC with zero boundary, which leads to the following matrix representation $D\in \reals^{n\times n}$ acting on the discretized function $\mathbf{u}$:
+    $$D\mathbf{u} = \frac{1}{2h}
     \begin{bmatrix}
-          -1 & 1 & 0 & \dots & \dots & 0
-        \\ 0 & -1 & 1 & \ddots & \ddots & \vdots
+        0 & 0 & 0 & 0 & \dots & 0
+        \\-1 & 0 & 1 & 0 & \dots & 0
+        \\ 0 & -1 & 0 & 1 & \ddots & 0
         \\ \vdots & \ddots & \ddots & \ddots & \ddots & \vdots
-        \\ \vdots & \ddots & 0 & -1 & 1 & 0
-        \\ 0 & \dots & 0 & 0 & -1 & 1
-        \\ 0 & \dots & 0 & 0 & 0 & -1
-    \end{bmatrix}\begin{pmatrix}u(x_1) \\ \vdots \\ u(x_n)\end{pmatrix}$$ The final row is not defined TODO CHECK THE USUAL FORMULAS
+        \\ 0 & \ddots & -1 & 0 & 1 & 0
+        \\ 0 & \dots & 0 & -1 & 0 & 1
+        \\ 0 & \dots & 0 & 0 & 0 & 0
+    \end{bmatrix}\mathbf{u}$$ 
+    The first and final empty rows encode the Dirichlet BC.
 }
-\example{Finite Differences, Laplacian}{
-    To approximate the second derivative, one can simply apply the first derivative twice. The matrix $D^2$ will then be the matrix product $D\cdot D$, with shape 
-    $$D^2 = \begin{bmatrix} 1 & -2 & 1 & 0 & \dots & 0 \\ 0 & 1 & -2 & 1 & \dots & 0 \\ \vdots & \vdots & \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & 0 & 0 & \dots & 1\end{bmatrix}$$ 
-    TODO CHECK DIMENSIONS. TODO CHECK 
+\example{1D Finite Differences, Laplacian}{
+    To approximate the second derivative, we use the central difference twice. 
+    $$\frac{\partial^2}{\partial x^2}u(x_i) \approx \frac{u(x_{i+1}) - 2 u(x_i) + u(x_{i-1})}{2h}$$ 
+    This leads to matrix (with Dirichlet BCs = $0$)
+    $$L\mathbf{u} = \frac{1}{h^2}
+    \begin{bmatrix}
+    0 & 0 & 0 & 0 & \cdots & 0 \\
+    1 & -2 & 1 & 0 & \cdots & 0 \\
+    0 & 1 & -2 & 1 & \cdots & 0 \\
+    \vdots & \vdots & \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & \cdots & 1 & -2 & 1 \\
+    0 & 0 & \cdots & 0 & 0 & 0 \\
+    \end{bmatrix}\mathbf{u}
+    $$
+    The first and final empty rows encode the Dirichlet BC.
 }
 \example{Method of Lines applied to the Heat Equation}{
     The heat equation (\ref{eq:heat_equation}) makes use the linear differential operator $\Delta$, the Laplacian. By discretizing into spatial points $n = |\mathbb{X}|$ and deriving a suitable matrix $L\in\reals^{n\times n}$ estimating $\Delta$, we get the system of $n$ ODEs

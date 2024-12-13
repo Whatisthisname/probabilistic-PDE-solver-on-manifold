@@ -327,10 +327,14 @@ def jax_batch_smooth_and_sample(
             mean=smooth_state.m_out, chol_cov=smooth_state.Ch_out
         )
 
-        carry = Carry(next_state_smoothed=next_state_smoothed, last_sample=t_sample)
-        output = next_state_smoothed.mean, next_state_smoothed.chol_cov, t_sample
+        new_carry = Carry(next_state_smoothed=next_state_smoothed, last_sample=t_sample)
+        output = (
+            carry.next_state_smoothed.mean,
+            carry.next_state_smoothed.chol_cov,
+            carry.last_sample,
+        )
 
-        return carry, output
+        return new_carry, output
 
     T_sample = last_filtered_state.mean + jnp.einsum(
         "ij, kj -> ki", last_filtered_state.chol_cov, noise[0]
