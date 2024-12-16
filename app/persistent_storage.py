@@ -54,8 +54,8 @@ experiment_setup["wave and tan"] = {
     "problem_title": "∂²u/∂t² = -Δu -tan(u)",
     "priors": ["wave", "iwp"],
     "prior_scale": [2.5],
-    "derivatives": [2, 3, 4],
+    "derivatives": [1, 2, 3],
     "timesteps": jnp.logspace(1, 3.5, 10, endpoint=True, base=10).astype(int),
-    "vector_field": lambda u, du, laplace: -(laplace @ u) - tan(u),
+    "vector_field": lambda u, du, laplace: -(laplace @ u) - 1e-10 * tan(u),
     "order": 2,
 }

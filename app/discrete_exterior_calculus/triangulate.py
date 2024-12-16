@@ -17,7 +17,6 @@ def should_subdivide(l1, l2, l3):
     is_triangle = longest < (medium + shortest)
 
     if not is_triangle:
-        print("Not a triangle")
         return True
 
     # # TO ENSURE MINIMUM AREA
@@ -26,8 +25,10 @@ def should_subdivide(l1, l2, l3):
     # if area > 0.1:
     #     return True
 
-    if longest >= (shortest + shortest):
+    if longest >= 1.2 * (shortest):
         return True
+    # if longest >= (shortest + shortest):
+    #     return True
 
     if longest >= 0.5:
         return True
@@ -186,7 +187,6 @@ def add_distances_to_mesh_with_metric(
 
         # FIX THE OPPOSING TRIANGLE:
         if other_corner_node is not None:
-            print("not none")
             other_tri = (medium_node, short_node, other_corner_node)
             o_short_side, o_medium_side, o_long_side = (
                 get_triangle_with_opposite_sidelengths(data, other_tri)

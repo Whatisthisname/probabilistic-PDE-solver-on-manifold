@@ -7,10 +7,12 @@
 \usetikzlibrary{calc}
 \usepackage{xcolor}
 \usepackage{caption}
-\usepackage{algorithm}
-\usepackage{algpseudocodex}
+\usepackage{transparent}
+% \usepackage{algorithm}
+% \usepackage{algpseudocodex}
 \usepackage{tikz}
 \usepackage{listings}
+\usepackage{changepage}   % for the adjustwidth environment
 \usetikzlibrary{arrows.meta, positioning}
 \tcbuselibrary{listingsutf8}
 \usepackage{microtype}
@@ -73,7 +75,7 @@
     text width=0.95\columnwidth,
     before=\vspace{1mm}, 
     after=\vspace{1mm}, 
-    colback=orange!3, % Background color (light gray)
+    colback=orange!3, % Background color (light orange)
     colframe=black!70,  % Border color
     coltitle=gray!10,  % Title color
     fonttitle=\bfseries, % Title font style
@@ -130,4 +132,37 @@
     \end{algobox}%
     \noindent
 }
-%%%%HEADER
+
+
+\newtcolorbox{questionbox}[2][]{%
+    text width=0.95\columnwidth,
+    before=\vspace{1mm}, 
+    after=\vspace{1mm}, 
+    colback=orange!3, % Background color (light orange)
+    colframe=black!70,  % Border color
+    coltitle=gray!10,  % Title color
+    fonttitle=\bfseries, % Title font style
+    sharp corners,   % Box style
+    left=2pt,
+    right=2pt,
+    top=2pt,
+    bottom=2pt,
+    breakable,
+    title=Question: {#1},         % Title passed as the first argument
+    pad at break*=1pc,
+    overlay first and middle={
+        \coordinate (A1) at ($(interior.south east) + (-10pt,5pt)$);
+        \coordinate (C1) at ($(interior.south east) + (-6pt,7.5pt)$);
+        \draw[fill=black!50] (A1) -- +(0,5pt) -- (C1) -- cycle;
+    }
+}
+
+\newcommand{\question}[2]{%
+\noindent%
+    \begin{questionbox}[#1]%
+    .#2%
+    \end{questionbox}%
+    \noindent
+}
+
+%%%HEADER

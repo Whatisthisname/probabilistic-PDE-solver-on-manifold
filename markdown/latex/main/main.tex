@@ -14,51 +14,42 @@ In this thesis we discuss details of implementing a probabilistic numerical solv
 We have structured the thesis as a guide on how to implement and follow the results, and we try to motivate the steps to the best of our efforts.
 \end{abstract}
 
+\newpage
+\tableofcontents
+
 \ref{sec:manifolds}
 \ref{sec:pde}
 \ref{sec:prior}
-\ref{sec:residual}
-\ref{sec:matrix_exponential}
-\ref{sec:kalman_filter}
+\ref{sec:intrinsic_triangulation}
+\ref{sec:solver_experiments}
+
 
 \newpage
 \section{Overview}\label{sec:overview}
 \input{../summary/summary.tex}
 
 \newpage
-\section{Riemannian Manifolds}\label{sec:manifolds}
+\section{Riemannian Manifolds and Discrete Exterior Calculus}\label{sec:manifolds}
 \input{../geometry/geometry.tex}
 
 \newpage
-\section{Partial Differential Equations}\label{sec:pde}
+\section{Partial Differential Equations and the Method of Lines}\label{sec:pde}
 \input{../pde/pde.tex}
 
 \newpage
-\section{Prior Distribution}\label{sec:prior}
+\section{Probabilistic Numerical Solver for ODEs}\label{sec:prior}
 \input{../prior/prior.tex}
 
+\newpage*
 \newpage
-\section{Information Operator}\label{sec:residual}
-\input{../information_op/information_op.tex}
-
-\newpage
-\section{Discretizing Prior}\label{sec:matrix_exponential}
-\input{../matrix_exponential/matrix_exponential.tex}
+With a long introduction to the topics of this thesis out the way, we can move to some contributions. The first contribution is an algorithm to build an intrinsic triangulation of manifolds provided only a metric tensor. This lets one apply the methods of discrete exterior calculus to obtain a discrete Laplacian, which can subsequently be used in the Method of Lines to solve PDEs, either using standard solvers or probabilistic solvers. The algorithm is detailed in the next section
+\section{Building an Intrinsic Triangulation from a Metric}\label{sec:intrinsic_triangulation}
+\input{../intrinsic_triangulation/intrinsic_triangulation.tex}
 
 \newpage
-\section{Kalman Filter}\label{sec:kalman_filter}
-\input{../kalman_filter/kalman_filter.tex}
+\section{Benchmarking and Experiments with the Solver}\label{sec:solver_experiments}
+\input{../solver_experiments/solver_experiments.tex}
 
-\newpage
-\section{Experiments}
-\input{../experiments/experiments.tex}
-
-\newpage
-\section{Results}
-Use the \texttt{figure*} or \texttt{table*} environments for figures or tables spanning both columns.
-
-
-\cite{example2024}
 \printbibliography
 
 \end{document}

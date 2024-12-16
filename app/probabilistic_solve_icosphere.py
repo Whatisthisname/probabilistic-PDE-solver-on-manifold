@@ -10,7 +10,7 @@ from probabilistic_numerics import kalman_filter
 config.update("jax_enable_x64", True)
 
 end_time = 10
-return_times = jnp.linspace(0, end_time, 100)
+return_times = jnp.linspace(0, end_time, 1500, endpoint=True)
 
 first_order_problems = ["heat", "heat and tanh", "heat small tanh", "heat and tanh u"]
 second_order_problems = ["wave", "wave and tanh"]
@@ -61,7 +61,6 @@ def solve(
         del taylor_vector_field
 
         initial_value = jnp.array(tcoeffs).flatten()
-        initial_cov_diag = jnp.zeros_like(initial_value)
 
     if order == 2:
 
@@ -82,10 +81,10 @@ def solve(
         del taylor_vector_field
 
         initial_value = jnp.array(tcoeffs).flatten()
-        initial_cov_diag = jnp.zeros_like(initial_value)
 
     delta_time = end_time / (n_solution_points - 1)  # -1 because we start at 0
     solution_times = jnp.linspace(0, end_time, n_solution_points, endpoint=True)
+    initial_cov_diag = jnp.zeros_like(initial_value)
 
     # print("now")
     # print(non_linear_observation_function(initial_value, 0, 0))
@@ -101,7 +100,7 @@ def solve(
     # print(non_linear_observation_function(initial_value, 0, 0))
 
     _samples, kalman_sol, u_std = kalman_filter.solve_nonlinear_IVP(
-        prior_matrix=-mesh.laplace_matrix * prior_scale,
+        prior_matrix=-mesh.laplace_matrix,
         initial_mean=initial_value,
         initial_cov_diag=initial_cov_diag,
         derivatives=q,

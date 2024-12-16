@@ -109,7 +109,7 @@ Dirichlet BCs amount to "pinning" the solution to a specific value at the bounda
         \nabla_x u(t, x)^\top n(x) &= d(x) & x\in \partial\mathcal{M}
     \end{align*}
 }
-Neumann BCs are a bit less intuitive, but allow one to set the "slope" at the boundary.
+Neumann BCs are a bit less intuitive, but allow one to set the "slope" at the boundary. We will only be considering Dirichlet BCs in this thesis.
 \\A simple instance of a PDE is the heat equation, which we will return to as a running example. It is defined with the Laplace operator, a differential operator involving partial derivatives. 
 \example{Heat Equation on $(0,1)\subset \reals$}{
     The heat equation describes the evolution of temperature $u(t, \mathbf{x})$ at a point $\mathbf{x}$ and time $t$.
@@ -125,27 +125,28 @@ Neumann BCs are a bit less intuitive, but allow one to set the "slope" at the bo
         \label{fig:heat_1d}
     \end{center}
 }
-\subsection{Method of Lines}
+\subsection*{Method of Lines}
 The challenge with ODEs was the continuous parameter $t$, which we overcame by discretizing across the temporal dimension. However, our PDEs now additionally depend on continuous spatial parameters $\mathbf{x}$. The Method of Lines (MOL) \cite{mol} works by converting the PDE to a system of ODEs, for which existing ODE solvers can be used. To convert to a system of ODEs, the only continuous parameter $u$ may depend on is $t$. By discretizing space into finite set of points $\mathbb{X} = (\mathbf{x}_1, \dots, \mathbf{x}_n)$, the continuous spatial input is been reduced to discrete indexing into $n$-vector $\mathbf{u}(t)$
 $$\mathbf{u}(t) = \begin{bmatrix}
     u(t, \mathbf{x}_1), \dots, u(t, \mathbf{x}_n)
 \end{bmatrix}^\top$$ 
 containing the solution at each of the collocation points. However, having discretized space into a countable set of points, the differential operators acting on the spatial dimension are no longer defined. 
-
-\definition{Collocation points}{
-    In finite difference methods, collocation points are the spatial points where the finite difference approximations of derivatives are computed.
-}
-
 \definition{Finite Difference Methods}{
     Finite Differences (FD) methods approximate differential operators from regularly spaced finite points $\mathbb{X}$ of space. Standard differential operators are defined through limits, but with a finite number of spatial points, the limit must be approximated.
     This yields finite difference operators, which can be applied to a function evaluated at the same points $\mathbb{X}$ to approximate its spatial derivative in theses points.
     \\ 
     Like continuous differential operators, FD operators are only guaranteed to be defined on the interior of the domain. Supplying boundary conditions is therefore still necessary.
 }
+\definition{Collocation points}{
+    In finite difference methods, collocation points are the spatial points where the finite difference approximations of derivatives are computed.
+}
 For linear differential operators the finite difference method will also be linear and can thus be written as a matrix. The exact form of the FD method depends on the discretization. In Euclidean space, rectangular grids yield simple formulas depending on the grid-spacing. On curved manifolds however, the grid-method breaks down. The methods from Discrete Exterior Calculus (ch. \ref{sec:manifolds}) give formulas for FD operators on discretized manifolds (triangle meshes). 
-\example{1D Finite Differences, Gradient}{
+\example{$\reals$ Finite Differences, Gradient}{
     In one dimension, from a finite set of collocation points $$\mathbb{X} = (x_1<\dots<x_n) \subset (0, 1)$$ spaced $h$ apart, one can approximate the first derivative of $u: (0, 1) \to \reals$ on the interior $x_i$ with the central difference 
-    $$\frac{\partial}{\partial x}u(x_i) \approx \frac{u(x_{i+1}) - u(x_{i-1})}{x_{i+1} - x_{i-1}} = \frac{u(x_{i+1}) - u(x_{i-1})}{2h}$$ 
+    \begin{align*}
+        \frac{\partial}{\partial x}u(x_i) &\approx \frac{u(x_{i+1}) - u(x_{i-1})}{x_{i+1} - x_{i-1}}
+        \\&= \frac{u(x_{i+1}) - u(x_{i-1})}{2h} 
+    \end{align*}
     This formula breaks down for points $x_1$ and $x_n$ at the boundary, for which boundary conditions must be incorporated into the matrix. We will choose Dirichlet BC with zero boundary, which leads to the following matrix representation $D\in \reals^{n\times n}$ acting on the discretized function $\mathbf{u}$:
     $$D\mathbf{u} = \frac{1}{2h}
     \begin{bmatrix}
@@ -159,7 +160,7 @@ For linear differential operators the finite difference method will also be line
     \end{bmatrix}\mathbf{u}$$ 
     The first and final empty rows encode the Dirichlet BC.
 }
-\example{1D Finite Differences, Laplacian}{
+\example{$\reals$ Finite Differences, Laplacian}{
     To approximate the second derivative, we use the central difference twice. 
     $$\frac{\partial^2}{\partial x^2}u(x_i) \approx \frac{u(x_{i+1}) - 2 u(x_i) + u(x_{i-1})}{2h}$$ 
     This leads to matrix (with Dirichlet BCs = $0$)
@@ -175,6 +176,8 @@ For linear differential operators the finite difference method will also be line
     $$
     The first and final empty rows encode the Dirichlet BC.
 }
+The discrete differential operator encodes the spatial structure of the domain, and can be used to convert the PDE to a system of ODEs. Note that, \textit{once the differential operator is discretized, there is no reference to the underlying metric or topological structure. This information is encoded exclusively in the differential operator,} which means that the Method of Lines can be applied to any PDE on any domain, provided the differential operator can be discretized.
+We will give a formula for the discrete gradient and Laplacian on a triangle mesh in chapter \ref{sec:manifolds}.
 \example{Method of Lines applied to the Heat Equation}{
     The heat equation (\ref{eq:heat_equation}) makes use the linear differential operator $\Delta$, the Laplacian. By discretizing into spatial points $n = |\mathbb{X}|$ and deriving a suitable matrix $L\in\reals^{n\times n}$ estimating $\Delta$, we get the system of $n$ ODEs
     $$\hspace*{-3mm}i\!\in\!\{1,.., n\}\!: \hspace{2mm} \frac{d}{dt}u(t)_i = -L_i u(t)  \in \reals \hspace{14mm}$$
@@ -185,9 +188,6 @@ For linear differential operators the finite difference method will also be line
     \end{align}
     \\
     The solution in figure \ref{fig:heat_1d} was obtained using this exact method, for $\mathbb{X} = \{0, \frac{1}{100}, \frac{2}{100}, \dots, \frac{99}{100}, 1\}$ and the FD Laplacian matrix from the previous box.
-}
-\algorithmbox{!!!Key Insight!!!}{
-    Note that, once the differential operator is discretized, there is no reference to the underlying metric or topological structure. This information is encoded exclusively in the differential operator.
 }
 \example{Method of Lines applied to the Wave Equation}{
     The wave equation describes the evolution of the height of a wave $u(t, \mathbf{x})$ at a point $\mathbf{x}$ and time $t$.
@@ -214,11 +214,11 @@ For linear differential operators the finite difference method will also be line
     $$
     A is of dimension $2n \times 2n$ but highly sparse. The identity matrix $\text{I}_n$ plays the same role as the "$1$" in eq. \ref{eq:linear_stack}.
 }
-The sparse of these high order system matrices will play a big part in later section where we will specify prior distributions over PDE solutions. For good measure, we will take a few more examples of linear PDEs and give their resulting system matrix.
+The sparse block-pattern in high derivative-order system matrices will be repeated in chapter \ref{sec:prior} where we will specify prior distributions over state-space encoded PDE solutions. For good measure, we will take a few more examples of linear PDEs and give their resulting system matrix.
 
 \example{MOL on different PDEs and their 1st Order ODE Representation}{
     In the following table, $\textbf{I}$ is the $n\times n$ identity matrix, and $\mathbf{0}$ the $n\times n$ zero matrix.
-    \hspace*{-2mm}\begin{tabular}{c|c|c}
+        \hspace*{-2mm}\begin{tabular}{c|c|c}
         \hline 
         Linear PDE & System Mat. & $\vec{u}$
         \\\hline \hspace*{2mm} & \hspace*{2mm} 
@@ -282,9 +282,10 @@ The sparse of these high order system matrices will play a big part in later sec
         \\ \hspace*{2mm} & \hspace*{2mm} 
         % END
     \end{tabular}
+    % TODO add label
     \\
     \\
-    Notice the presence of the off-diagonal series of $\textbf{I}$. For an order $q$ PDE (or ODE), the upper 
+    Notice the presence of the off-diagonal series of $\textbf{I}$. For an order $q$ PDE (or ODE), the upper $q\cdot n$ rows of the system Matrix will have this pattern to encode the derivatives.
 }\noindent
 Approximating the spatial derivatives is a simplified model, which is a source of error. The Probabilistic Numerical Solution in this thesis only models the error from time-discretization.
 \example{Error Introduced by Spatial Discretization}{

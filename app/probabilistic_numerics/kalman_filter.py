@@ -22,7 +22,7 @@ def _taylor_coef_diag(h: float, state: int, derivatives: int) -> jnp.ndarray:
 
 def get_taylor_add_h(h: float, state: int, derivatives: int) -> jnp.ndarray:
     diag = _taylor_coef_diag(h, state, derivatives)
-    # return jnp.eye(state * (1 + derivatives))
+    # return jnp.eye(state * (1 + derivatives))  # TODO
     return jnp.diag(diag)
 
 
@@ -40,7 +40,7 @@ def solve_nonlinear_IVP(
     derivatives: int,
     n_solution_points: int,
     delta_time: float,
-    prior_type: Literal["iwp", "heat", "wave", "all"],
+    prior_type: Literal["iwp", "heat", "wave", "jerk", "all"],
     observation_function,
     observation_uncertainty: jnp.array,
     update_indicator,
@@ -54,9 +54,15 @@ def solve_nonlinear_IVP(
     )
 
     if prior_type == "heat":  # place prior matrix in bottom right
-        SDE_coef = SDE_coef.at[-state_size:, -state_size:].set(prior_matrix)
+        SDE_coef = SDE_coef.at[-state_size:, -1 * state_size : -0 * state_size].set(
+            prior_matrix
+        )
     elif prior_type == "wave":  # place prior matrix in left of bottom right
-        SDE_coef = SDE_coef.at[-state_size:, -2 * state_size : -state_size].set(
+        SDE_coef = SDE_coef.at[-state_size:, -2 * state_size : -1 * state_size].set(
+            prior_matrix
+        )
+    elif prior_type == "jerk":  # place prior matrix in left of left of bottom right
+        SDE_coef = SDE_coef.at[-state_size:, -3 * state_size : -2 * state_size].set(
             prior_matrix
         )
     elif (
@@ -95,7 +101,7 @@ def solve_nonlinear_IVP(
 
     filtered, reverse_parameters = cholk.jax_batch_extended_filter(
         prior_mean=precondition_matrix @ initial_mean,
-        prior_cholvariance=jnp.diag(jnp.sqrt(initial_cov_diag)),
+        prior_cholcov=jnp.diag(jnp.sqrt(initial_cov_diag)),
         observation_function=lambda state, time, step: observation_function(
             unprecondition_matrix @ state, time, step
         ),
@@ -104,7 +110,7 @@ def solve_nonlinear_IVP(
         b_cond_state=jnp.zeros(state_size * (1 + q)),
         Ch_cond_state=jnp.linalg.cholesky(Q),
         update_indicator=update_indicator,
-        timesteps=n_solution_points,
+        n_solution_points=n_solution_points,
         delta_time=delta_time,
     )
 

@@ -188,14 +188,14 @@ def jax_batch_filter(
 # don't JIT this
 def jax_batch_extended_filter(
     prior_mean,
-    prior_cholvariance,
+    prior_cholcov,
     observation_function,
     Ch_cond_obs,
     A_cond_state,
     b_cond_state,
     Ch_cond_state,
     update_indicator,
-    timesteps,
+    n_solution_points,
     delta_time,
 ) -> tuple[list[CholGauss], ReverseParams]:
     Carry = namedtuple("Carry", ["prior", "output_noise_scale_acc"])
@@ -225,7 +225,7 @@ def jax_batch_extended_filter(
     def loop(carry: Carry, input):
         time, step, update = input
 
-        state_state_dist = chol_marginal_and_reverse(
+        state_state_dist = chol_marginal_and_reverse(  # PREDICT
             carry.prior.mean,
             carry.prior.chol_cov,
             A_cond_state,
@@ -237,7 +237,7 @@ def jax_batch_extended_filter(
             mean=state_state_dist.m_out, chol_cov=state_state_dist.Ch_out
         )
 
-        filtered_state, gamma = jax.lax.cond(
+        filtered_state, gamma = jax.lax.cond(  # UPDATE
             update,
             integrate_observation,  # <- if true
             lambda state, time, step: (state, 0.0),  # <- if false
@@ -261,23 +261,37 @@ def jax_batch_extended_filter(
     (carry, (filtered_states, reverse_parameters)) = jax.lax.scan(
         loop,
         init=Carry(
-            prior=CholGauss(prior_mean, prior_cholvariance),
+            prior=CholGauss(prior_mean, prior_cholcov),
             output_noise_scale_acc=0.0,
         ),
         xs=(
-            jnp.arange(timesteps) * delta_time,  # time
-            jnp.arange(timesteps),  # step
-            update_indicator,  # update
+            # arange from 1, step 0 is the prior
+            jnp.arange(1, n_solution_points) * delta_time,  # time
+            jnp.arange(1, n_solution_points),  # step
+            update_indicator[1:],  # update
         ),
     )
 
-    gamma = jnp.sqrt(carry.output_noise_scale_acc / (jnp.sum(update_indicator) + 1))
+    gamma = jnp.sqrt(carry.output_noise_scale_acc / (jnp.sum(update_indicator) - 1))
+
+    if gamma == 0 or jnp.isnan(gamma):
+        print("SETTING GAMMA TO ONE!!!")
+        gamma = 1  # avoid division by zero
 
     filtered_states: CholGauss
 
     scaled_filtered_states = CholGauss(
-        mean=filtered_states.mean, chol_cov=filtered_states.chol_cov * gamma
+        mean=jnp.concatenate((prior_mean.reshape(1, -1), filtered_states.mean), axis=0),
+        chol_cov=gamma
+        * jnp.concatenate(
+            (
+                prior_cholcov.reshape(1, len(prior_mean), len(prior_mean)),
+                filtered_states.chol_cov,
+            ),
+            axis=0,
+        ),
     )
+
     scaled_reverse_parameters = ReverseParams(
         A_rev_list=reverse_parameters.A_rev_list,
         b_rev_list=reverse_parameters.b_rev_list,
@@ -307,18 +321,18 @@ def jax_batch_smooth_and_sample(
         ),
     )
 
-    def loop(carry: Carry, rev_params):
+    def loop(input_carry: Carry, rev_params):
         rev_params, noise = rev_params
         smooth_state = chol_marginal_and_reverse(
-            carry.next_state_smoothed.mean,
-            carry.next_state_smoothed.chol_cov,
+            input_carry.next_state_smoothed.mean,
+            input_carry.next_state_smoothed.chol_cov,
             rev_params.A_rev_list,
             rev_params.b_rev_list,
             rev_params.Ch_rev_list,
         )
 
         t_sample = (
-            jnp.einsum("ij, kj -> ki", rev_params.A_rev_list, carry.last_sample)
+            jnp.einsum("ij, kj -> ki", rev_params.A_rev_list, input_carry.last_sample)
             + rev_params.b_rev_list
             + jnp.einsum("ij, kj -> ki", rev_params.Ch_rev_list, noise)
         )
@@ -327,14 +341,17 @@ def jax_batch_smooth_and_sample(
             mean=smooth_state.m_out, chol_cov=smooth_state.Ch_out
         )
 
-        new_carry = Carry(next_state_smoothed=next_state_smoothed, last_sample=t_sample)
-        output = (
-            carry.next_state_smoothed.mean,
-            carry.next_state_smoothed.chol_cov,
-            carry.last_sample,
+        output_carry = Carry(
+            next_state_smoothed=next_state_smoothed, last_sample=t_sample
         )
 
-        return new_carry, output
+        output = (
+            output_carry.next_state_smoothed.mean,
+            output_carry.next_state_smoothed.chol_cov,
+            output_carry.last_sample,
+        )
+
+        return output_carry, output
 
     T_sample = last_filtered_state.mean + jnp.einsum(
         "ij, kj -> ki", last_filtered_state.chol_cov, noise[0]
@@ -346,6 +363,26 @@ def jax_batch_smooth_and_sample(
         init=Carry(next_state_smoothed=last_filtered_state, last_sample=T_sample),
         xs=(reverse_parameters, noise),
         reverse=True,
+    )
+
+    # now concatenate the T_sample to the end,
+    # and the last filtered state to the end
+
+    means = jnp.concatenate((means, last_filtered_state.mean.reshape(1, -1)), axis=0)
+    chol_covs = jnp.concatenate(
+        (
+            chol_covs,
+            last_filtered_state.chol_cov.reshape(
+                1, last_filtered_state.mean.shape[0], last_filtered_state.mean.shape[0]
+            ),
+        ),
+        axis=0,
+    )
+    # samples are of shape (time, n_samples, state_dim)
+    # so we concatenate in the time dimension at the end
+    samples = jnp.concatenate(
+        (samples, T_sample.reshape(1, n_samples, last_filtered_state.mean.shape[0])),
+        axis=0,
     )
 
     return means, chol_covs, samples

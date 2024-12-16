@@ -25,13 +25,14 @@
             const aspect = viewport.offsetWidth / viewport.offsetHeight;
             texture.repeat.set(scale * aspect, scale);
 
-
-            scene.background = texture;
+            // set a white background:
+            scene.background = new THREE.Color(0xffffff);
+            // scene.background = texture;
         });
 
 
-        // camera = new THREE.PerspectiveCamera(75, viewport.offsetWidth / viewport.offsetHeight, 0.01, 1000);
-        camera = new THREE.OrthographicCamera(-viewport.offsetWidth / viewport.offsetHeight, viewport.offsetWidth / viewport.offsetHeight, 1, -1);
+        camera = new THREE.PerspectiveCamera(75, viewport.offsetWidth / viewport.offsetHeight, 0.01, 1000);
+        //camera = new THREE.OrthographicCamera(-viewport.offsetWidth / viewport.offsetHeight, viewport.offsetWidth / viewport.offsetHeight, 1, -1);
         camera.position.x = 1;
         camera.position.y = 1;
         camera.position.z = 1;
@@ -88,6 +89,7 @@
 
         // Translate and scale vertices
         const verticesNormalized = meshData.vertices.map(v => {
+            // return v
             const vec = new THREE.Vector3(...v);
             vec.add(offset).multiplyScalar(scale);
             return vec.toArray();
@@ -115,9 +117,20 @@
         // Apply initial color profile
         applyColorProfile(initialProfileName);
 
-        // Material with vertex colors
+        // Material with vertex colors and lig
         meshMaterial = new THREE.MeshBasicMaterial({
             vertexColors: true,
+            flatShading: true,
+            side: THREE.DoubleSide,
+            polygonOffset: true,
+            polygonOffsetFactor: 1, // positive value pushes polygon further away
+            polygonOffsetUnits: 1
+        });
+        meshMaterial = new THREE.MeshPhongMaterial({
+            vertexColors: false,
+            flatShading: true,
+            // light blue emissive color
+            emissive: 0x0000ff,
             side: THREE.DoubleSide,
             polygonOffset: true,
             polygonOffsetFactor: 1, // positive value pushes polygon further away
@@ -128,6 +141,12 @@
         mesh = new THREE.Mesh(meshGeometry, meshMaterial);
         scene.add(mesh);
 
+        // Add a strong white light to the scene
+
+        const light = new THREE.DirectionalLight(0xffffff, 0.6);
+        light.position.set(0.3, 2, 0);
+        scene.add(light);
+
         // Wireframe
         const wireframe = new THREE.WireframeGeometry(meshGeometry);
         const line = new THREE.LineSegments(wireframe);
@@ -137,7 +156,7 @@
         scene.add(line);
 
         // Axes
-        addAxes();
+        // addAxes();
     }
 
     function applyColorProfile(profileName, timeIndex = null) {

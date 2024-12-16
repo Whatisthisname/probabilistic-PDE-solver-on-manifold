@@ -102,7 +102,7 @@ def projected_slope_metric(point):
 
 
 def embed_to_bell(point):
-    scale = jnp.array([[0.1, 0.1], [0.1, 0.8]]) * 0.5
+    scale = jnp.array([[0.2, 0.2], [0.2, 0.7]]) * 0.5
     z = jnp.exp(-((jnp.linalg.norm(point @ jnp.linalg.inv(scale) @ point)) ** 2))
     return jnp.array([point[0], point[1], z])
 
