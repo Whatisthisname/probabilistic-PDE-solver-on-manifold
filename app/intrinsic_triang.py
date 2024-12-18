@@ -727,7 +727,7 @@ def heat_method_distance_from_vertex(F, l, source_vert):
 if __name__ == "__main__":
     # use this line to run on your own mesh of interest
     V, F = pp3d.read_mesh(
-        "/Users/theoruterwurtzen/Desktop/MSc Thesis/code/app/terrain8k.obj"
+        "/Users/theoruterwurtzen/Desktop/MSc Thesis/code/meshes/cut_bunny.obj"
     )
 
     # initialize the glue map and edge lengths arrays from the input data

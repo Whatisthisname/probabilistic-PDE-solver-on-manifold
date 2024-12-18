@@ -6,6 +6,8 @@ import numpy as np
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsla
 
+jax.config.update("jax_enable_x64", True)
+
 
 # @jax.jit
 def hyperbolic_distance(a, b):

@@ -40,7 +40,7 @@ def solve_nonlinear_IVP(
     derivatives: int,
     n_solution_points: int,
     delta_time: float,
-    prior_type: Literal["iwp", "heat", "wave", "jerk", "all"],
+    prior_type: Literal["iwp", "heat", "wave", "jerk", "all", "two"],
     observation_function,
     observation_uncertainty: jnp.array,
     update_indicator,
@@ -54,9 +54,7 @@ def solve_nonlinear_IVP(
     )
 
     if prior_type == "heat":  # place prior matrix in bottom right
-        SDE_coef = SDE_coef.at[-state_size:, -1 * state_size : -0 * state_size].set(
-            prior_matrix
-        )
+        SDE_coef = SDE_coef.at[-state_size:, -1 * state_size :].set(prior_matrix)
     elif prior_type == "wave":  # place prior matrix in left of bottom right
         SDE_coef = SDE_coef.at[-state_size:, -2 * state_size : -1 * state_size].set(
             prior_matrix
@@ -72,6 +70,10 @@ def solve_nonlinear_IVP(
         SDE_coef = SDE_coef.at[-state_size:, -2 * state_size : -state_size].set(
             prior_matrix
         )
+    elif (
+        prior_type == "two"
+    ):  # place prior matrix in left of bottom right and bottom right
+        SDE_coef = SDE_coef.at[-state_size:, -2 * state_size :].set(prior_matrix)
 
     unprecondition_matrix = get_taylor_add_h(delta_time, state_size, q)
     precondition_matrix = get_taylor_remove_h(delta_time, state_size, q)
@@ -83,10 +85,12 @@ def solve_nonlinear_IVP(
         SDE_coef, SDE_noise, delta_time
     )
 
-    if rank := jnp.linalg.matrix_rank(Q) < state_size * (1 + q):
+    if (rank := jnp.linalg.matrix_rank(Q)) < state_size * (1 + q):
         print(
             "WARNING: Rank of Q is",
             rank,
+            " and should be ",
+            state_size * (1 + q),
             ", which is not full rank. Applying 1e-8 diagonal jitter",
         )
         Q = Q + jnp.eye(state_size * (1 + q)) * 1e-8

@@ -39,7 +39,7 @@ Which says that, in expectation, it will satisfy the differential equation encod
     &\text{Cov}[U(t), U(s)] = \nonumber \\ e^{Ft}\Sigma_0e^{F^\top t} 
     + &\int_0^{\text{min}(s,t)} e^{F(t-\tau)}L\sigma^2L^\top e^{F^\top(t-\tau)} d\tau
 \end{align}
-The solution of the LTI SDE is a Gaussian Process with the above mean and covariance function (\cite{probnum}, \cite{gp_Rasmussen}). For the purposes of this thesis, this is mostly a fun fact - we will not be working with the full Gaussian Process or building its Gramian matrix, but will be smart and use the Markov property.
+The solution of the LTI SDE is a Gaussian Process with the above mean and covariance function (\cite{probnum}, \cite{gp_Rasmussen}). For the purposes of this thesis, this is mostly a fun fact - we will not be working with the full Gaussian Process or building its Gramian matrix, but will be clever about using the Markovianity of the process.
 \example{Motivating Linear SDEs}{
     A LTI SDE can be obtained by injecting Gaussian noise into a deterministic time-invariant ODE. We start off with the harmonic oscillator with an external force $f(t)$
     $$\frac{d^2}{dt^2}u = -ku - l\frac{d}{dt}u + f(t)$$

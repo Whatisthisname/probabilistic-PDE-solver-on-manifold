@@ -29,7 +29,7 @@ def perform_matrix_fraction_decomposition(SDE_coef, SDE_noise, delta_time):
     # Q = solution[:state, :state] @ A.T
     Q = expd[:state, state:] @ A.T
 
-    return A, 0.5 * (Q + Q.T)
+    return A, Q  # 0.5 * (Q + Q.T)
 
 
 if __name__ == "__main__":

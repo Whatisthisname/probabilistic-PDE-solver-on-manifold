@@ -346,6 +346,16 @@ class Mesh:
         ax.triplot(triang, color="black", linewidth=0.5)
         ax.set_aspect("equal")
 
+    def save_to_OBJ(self, filename, folder="meshes"):
+        """
+        Saves the mesh to an .obj file.
+        """
+        with open(os.path.join(folder, filename), "w") as f:
+            for v in self.vertices:
+                f.write(f"v {v[0]} {v[1]} {v[2]}\n")
+            for face in self.faces:
+                f.write(f"f {face[0]+1} {face[1]+1} {face[2]+1}\n")
+
     def dump_to_JSON(self, filename, profiles_dict, folder="produced_solutions"):
         """
         Dumps the mesh and profiles to a JSON file.

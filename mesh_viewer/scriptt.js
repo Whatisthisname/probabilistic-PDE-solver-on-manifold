@@ -126,16 +126,16 @@
             polygonOffsetFactor: 1, // positive value pushes polygon further away
             polygonOffsetUnits: 1
         });
-        meshMaterial = new THREE.MeshPhongMaterial({
-            vertexColors: false,
-            flatShading: true,
-            // light blue emissive color
-            emissive: 0x0000ff,
-            side: THREE.DoubleSide,
-            polygonOffset: true,
-            polygonOffsetFactor: 1, // positive value pushes polygon further away
-            polygonOffsetUnits: 1
-        });
+        // meshMaterial = new THREE.MeshPhongMaterial({
+        //     vertexColors: false,
+        //     flatShading: true,
+        //     // light blue emissive color
+        //     emissive: 0x0000ff,
+        //     side: THREE.DoubleSide,
+        //     polygonOffset: true,
+        //     polygonOffsetFactor: 1, // positive value pushes polygon further away
+        //     polygonOffsetUnits: 1
+        // });
 
         // Create and add mesh
         mesh = new THREE.Mesh(meshGeometry, meshMaterial);

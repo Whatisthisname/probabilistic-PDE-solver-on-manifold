@@ -4,7 +4,7 @@ from heapdict import heapdict
 import networkx as nx
 
 
-def dijkstra(startpos: np.ndarray, graph: nx.Graph, source_node: int) -> np.ndarray:
+def dijkstra(graph: nx.Graph, source_node: int) -> np.ndarray:
     center_node = source_node
 
     to_visit = heapdict()

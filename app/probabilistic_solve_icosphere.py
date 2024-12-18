@@ -10,10 +10,6 @@ from probabilistic_numerics import kalman_filter
 config.update("jax_enable_x64", True)
 
 end_time = 10
-return_times = jnp.linspace(0, end_time, 1500, endpoint=True)
-
-first_order_problems = ["heat", "heat and tanh", "heat small tanh", "heat and tanh u"]
-second_order_problems = ["wave", "wave and tanh"]
 
 
 def solve(
@@ -21,7 +17,6 @@ def solve(
     n_solution_points: int,
     derivatives: int,
     prior_type: Literal["heat", "wave", "iwp"],
-    prior_scale: float,
     vector_field: callable,
     order: int,
 ):
@@ -86,20 +81,7 @@ def solve(
     solution_times = jnp.linspace(0, end_time, n_solution_points, endpoint=True)
     initial_cov_diag = jnp.zeros_like(initial_value)
 
-    # print("now")
-    # print(non_linear_observation_function(initial_value, 0, 0))
-    # print(initial_value)
-    # print(initial_cov_diag)
-
-    # initial_value = jnp.zeros_like(initial_value)
-    # initial_cov_diag = jnp.zeros_like(initial_cov_diag)
-
-    # def non_linear_observation_function(state, time, step):
-    #     return E_0 @ state - E_1 @ state
-
-    # print(non_linear_observation_function(initial_value, 0, 0))
-
-    _samples, kalman_sol, u_std = kalman_filter.solve_nonlinear_IVP(
+    _samples, means, stds = kalman_filter.solve_nonlinear_IVP(
         prior_matrix=-mesh.laplace_matrix,
         initial_mean=initial_value,
         initial_cov_diag=initial_cov_diag,
@@ -113,10 +95,4 @@ def solve(
         n_samples=0,
     )
 
-    interpolated_means = jax.vmap(
-        lambda v: jnp.interp(return_times, solution_times, v)
-    )(kalman_sol.T).T
-    interpolated_stds = jax.vmap(lambda v: jnp.interp(return_times, solution_times, v))(
-        u_std.T
-    ).T
-    return interpolated_means, interpolated_stds
+    return means, stds
