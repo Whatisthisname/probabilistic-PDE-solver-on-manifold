@@ -1,32 +1,128 @@
 \input{../header.tex}
 \def\COMPILINGFROMMAIN{}
 \begin{document}
-
-\title{On Probabilistic Numerical Solvers for Partial Differential Equations on Riemannian Manifolds}
-\author{Theo Rüter Würtzen }
-\date{\today}
+\title{\Huge{Probabilistic Numerical Solvers for Partial Differential Equations on Riemannian 2-Manifolds}}
+\author{
+\\
+Master's Thesis in Computer Science
+\\
+\\
+\\
+\\
+\\
+\\
+\\
+Theo Rüter Würtzen\vspace{2mm}
+\\
+Department of Computer Science
+\\
+University of Copenhagen
+\\
+\\
+\\
+\\
+\\
+\\
+\\
+\\
+\\
+Supervised by 
+\\
+\\
+\\
+\\
+\\
+Peter Nicholas Krämer\vspace{2mm}
+\\
+Section for Cognitive Systems
+\\
+Technical University of Denmark
+\\
+\\
+\\
+\\
+\hspace*{7mm}\begin{tabular}{ccc}
+    \begin{tabular}{c}
+        Søren Hauberg\vspace{2mm}
+\\
+Section for Cognitive Systems
+\\
+Technical University of Denmark
+    \end{tabular}
+     & & \begin{tabular}{c}
+        Sebastian Weichwald\vspace{2mm}
+\\
+Department of Mathematical Sciences
+\\
+University of Copenhagen
+    \end{tabular}
+\end{tabular}
+}
+\date{}
 \maketitle
+
+\clearpage
 
 
 \begin{abstract}
-In this thesis we discuss details of implementing a probabilistic numerical solver for partial differential equations whose spatial domain is not a vector space. We cover topics including the concept of the metric tensor, embeddings of manifolds, mesh representations and refinement, discrete differential operators, ODEs, PDEs, and SDEs, numerical linear algebra, state space models, the (extended) Kálmán-filter and -smoother, and numerical stability. We conclude with experiments that test the efficiency of physically informed prior solutions in non-euclidean domains.
-
-We have structured the thesis as a guide on how to implement and follow the results, and we try to motivate the steps to the best of our efforts.
+Partial differential equations are ubiquitous in physics and simulations, and are generally solved numerically. The field of Probabilistic Numerics focuses on framing computation as probabilistic inference and has led to the development of efficient and competitive probabilistic numerical solvers of ordinary differential equations, which give the solution as a stochastic process. In this thesis, we extend the use of these solvers to partial differential equations on Riemannian manifolds. We give introductions to the touched upon topics, including but not limited to discretization of Riemannian manifolds, the discrete differential operators, and the use of stochastic differential equations as priors. We give an algorithm to build an intrinsic triangulation of a manifold, and empirically demonstrate how certain priors can accelerate the solution of nonlinear PDEs. We have structured the thesis as a guide on how to implement and follow the results, and we try to motivate the steps to the best of our efforts. We teach and explain with a focus on giving intuition through examples and analogies, and provide pointers to further reading.
 \end{abstract}
+
+\section*{Acknowledgements}
+I thank Nicholas for his high availability and thorough eye for detail during every supervision session and for including me in the fun sessions at the research group. I thank Søren Hauberg and Sebastian Weichwald for their enthusiasm and for enabling this project. Finally, I pat myself on the back for putting in the work.
 
 \newpage
 \tableofcontents
-
-\ref{sec:manifolds}
-\ref{sec:pde}
-\ref{sec:prior}
-\ref{sec:intrinsic_triangulation}
-\ref{sec:solver_experiments}
-
-
 \newpage
 \section{Overview}\label{sec:overview}
-\input{../summary/summary.tex}
+The thesis can broadly be seen as consisting of two separate parts that meet towards the end. One deals with Riemannian manifolds and how to convert them to a discrete form amenable to numerical computation. The other deals with ordinary / partial / stochastic differential equations and probabilistic numerical solvers. Finally these two parts meet, and we will use the discrete Laplacian and the probabilistic numerical solvers to solve partial differential equations whose spatial domain is the manifold.
+\\\\
+The thesis touches upon many subjects, some of which are active areas of research and could have been an entire thesis by themselves. We will supplement what is not taught in a classic computer / data science curriculum, but a full coverage of the topics is beyond the scope of this thesis. Nearly all figures in the thesis were made during the project and have subsequently been included in the thesis because they were found to be helpful in understanding the topics. The main parts of the thesis are structured as follows:
+\\\\
+Chapter \ref{sec:manifolds} gives an applied introduction to Riemannian Manifolds, triangle meshes and the discrete exterior calculus, all with the intention of defining the discrete Laplacian on a manifold.
+\\\\
+Chapter \ref{sec:intrinsic_triangulation} builds on chapter \ref{sec:manifolds} and addresses the problem of building the Laplacian matrix given only a Riemannian metric. We contribute an algorithm that solves this problem by constructing an intrinsic triangulation of a manifold, from which one can then build the Laplacian matrix using the tools from \ref{sec:manifolds}. We demonstrate the algorithm on a few examples.
+\\\\
+Chapter \ref{sec:pde} is the second part of the thesis. It gives an introduction to ordinary and partial differential equations. We discuss the ideas of the state-space representation and discretization using the Method of Lines, which is the method we will use in the later probabilistic numerical solver.
+\\\\
+Chapter \ref{sec:prior} builds on chapter \ref{sec:pde} to introduce the probabilistic numerical solver for ordinary differential equations. We cover how to specify a prior distribution over the solution using a stochastic differential equation, show to to manipulate the prior and posterior probability distributions, and give specific pointers on how to implement a stable solver.
+\\\\
+Chapter \ref{sec:solver_experiments} wraps up with a demonstration of the solver on a few examples. We show how the solver can be used to solve nonlinear PDEs, and contribute problem-specific priors that improve the speed of convergence.
+
+\section{Background}\label{sec:background}
+
+\subsection*{Probabilistic Numerical Methods}
+The field of Probabilistic Numerics methods frames traditional numerical tasks as problems of probabilistic inference. This approach enables the explicit modeling of uncertainty arising from limited computational resources \cite{itergp}, discretization errors\cite{pnmol}, or incomplete information \cite{exponential_probabilistic}. The book \cite{probnum} is a comprehensive introduction to the field. Probabilistic Numerics has yielded bayesian approaches to solutions of linear algebra problems \cite{pn_solver}, optimization problems \cite{pn_optimization}, and differential equations\cite{invention_of_ODE_solver}, leading to algorithms capable of not only producing a solution but also quantifying the uncertainty in that solution. Given prior beliefs about the unknown solution and a likelihood model informed by computational observations (e.g., evaluations of a differential operator), probabilistic solvers infer a posterior distribution over the solution.
+
+
+\subsection*{Numerical Solvers of Differential Equations}
+Traditional numerical methods for solving differential equations, such as the Runge-Kutta \cite{runge} methods, produce deterministic approximations of the solution. One can choose a trade-off between accuracy and computational efficiency \cite{butcher}, expressed by the convergence rate \cite{kanschat} of the method.
+
+On the other hand, Probabilistic Numerical solvers represent the solution as a distribution of functions\cite{nicoThesis} parameterized by a Gaussian process \cite{gp_Rasmussen}. Instead of providing a single deterministic output, these solvers return a probability distribution that encapsulates the uncertainty over the solution. 
+
+\subsection*{Uncertainty Quantification in Differential Equations}
+Uncertainty quantification is a compelling feature of probabilistic solvers, providing information beyond what traditional methods offer. Some of the key advantages include:
+
+Error Awareness:
+Probabilistic solvers inherently quantify the error introduced by numerical approximations. This feature enables adaptive refinement of the solution, allocating computational resources to regions where uncertainty is highest.
+
+Model Validation:
+UQ can highlight regions where numerical errors dominate, serving as a diagnostic tool for assessing the reliability of a simulation. This is especially valuable in safety-critical applications, such as aerospace engineering or climate modeling.
+
+Bayesian Integration:
+In scenarios where differential equation solvers are part of a larger Bayesian inference pipeline (e.g., physics-informed machine learning models), probabilistic solvers seamlessly propagate uncertainties, ensuring consistency across computational stages.
+
+Exploration of Alternate Scenarios:
+The uncertainty distributions produced by probabilistic solvers allow exploration of alternative scenarios and sensitivity analyses. For instance, in inverse problems, these distributions can guide the estimation of parameters that best explain observed data.
+
+By embedding numerical tasks into a probabilistic framework, probabilistic solvers not only solve equations but also provide insights into the confidence and limitations of the computed solutions. This perspective is particularly useful in applications where data-driven models are integrated with physical simulations or when working with incomplete or noisy data.
+
+
+
+
+
+
+
 
 % \newpage
 % \section{Riemannian Manifolds and Discrete Exterior Calculus}\label{sec:manifolds}
@@ -49,6 +145,10 @@ We have structured the thesis as a guide on how to implement and follow the resu
 % \newpage
 % \section{Benchmarking and Experiments with the Solver}\label{sec:solver_experiments}
 % \input{../solver_experiments/solver_experiments.tex}
+
+\section{Conclusion}
+  
+
 
 \printbibliography
 
