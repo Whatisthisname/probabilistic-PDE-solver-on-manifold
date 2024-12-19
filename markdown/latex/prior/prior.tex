@@ -4,11 +4,8 @@
     \begin{document}
 \fi
 
-This section will use language explained in section \ref{sec:pde}. If something is not clear, please refer back to that section.
-\\
-\\
-A probabilistic numerical (PN) solver of ODEs is fundamentally different than a classic numerical solver. We will use the model first defined in \cite{invention_of_ODE_solver} and cover a few tricks from \cite{nicoThesis}. A PN solver starts with a prior distribution over the solution function $u$, which is then conditioned on information about the vector field $f$. The resulting posterior distribution is referred to as a PN solution of the ODE (\cite{nicoThesis}, \cite{exponential_probabilistic}).
 We will go through the different steps and cover the basic prerequisites.
+This chapter builds on chapter \ref{sec:pde}. We have now covered almost all prerequisites to characterize probabilistic numerical solvers of ODEs. A probabilistic numerical (PN) solver of ODEs is fundamentally different than a classic numerical solver. We will use the model first defined in \cite{invention_of_ODE_solver} and cover a few tricks from \cite{nicoThesis}. A PN solver starts with a prior distribution over the solution function $u$, which is then conditioned on information about the vector field $f$. The resulting posterior distribution is referred to as a PN solution of the ODE (\cite{nicoThesis}, \cite{exponential_probabilistic}). To get to this point, we will need to specify our prior.
 
 \subsection*{Specifying a Prior Distribution}
 Prior distributions over functions are a natural way to model uncertainty in the solution of an ODE. We will use a prior distribution $\mathcal{P}$ over the full state-space representation of $u$, containing $u$ and its first $q$ time-derivatives. 
@@ -113,7 +110,7 @@ This is an instance of a Linear Gaussian Model \cite{koller_bn}, which is a trac
 \end{figure}
 \subsection*{Using the distribution as a Prior}
 To use the discrete-time distribution of functions as a prior distribution, we need to integrate further information into the system that we can then update the prior with. We will extend the Bayesian network with potential observations $O_i$ of each state $\vec{U}_i$. Although we might not know the complete state at each instant, there might be properties that we do know, such as the derivative of the function at some time. 
-\\ To build on the network in fig. \ref{fig:finite_time_states}, we will define the conditional distributions of a partial observations of some of the time instances. These partial observations at time $i$ are expressed as $O_i \sim \mathcal{N}(m(\vec{U}_i), \Sigma_m)$, where $m$ is an affine\footnote{The measurement model has to be a linear function of the state, as the joint distribution will only be multivariate Gaussian under linear transformations.} function of $\vec{U}_i$. $m$ will be thought of as a measurement model, although this interpretation can bring along physical assumptions that are not always helpful. We will usually have $\Sigma_m = \mathcal{0}$\footnote{This case is reffered to as the "Dirac Likelihood" \cite{exponential_probabilistic} because it places all mass on a single event.}, but nonzero noise can be useful, as in \cite{pnmol}\footnote{Here, the authors use it to model uncertainty in the ODE description itself, which can stem from coarse discretization of an underlying PDE or from left out terms}.
+\\ To build on the network in fig. \ref{fig:finite_time_states}, we will define the conditional distributions of a partial observations of some of the time instances. These partial observations at time $i$ are expressed as $O_i \sim \mathcal{N}(m(\vec{U}_i), \Sigma_m)$, where $m$ is an affine\footnote{The measurement model has to be a linear function of the state, as the joint distribution will only be multivariate Gaussian under linear transformations.} function of $\vec{U}_i$. $m$ will be thought of as a measurement model, although this interpretation can bring along physical assumptions that are not always helpful. We will usually have $\Sigma_m = \mathbf{0}$\footnote{This case is reffered to as the "Dirac Likelihood" \cite{exponential_probabilistic} because it places all mass on a single event.}, but nonzero noise can be useful, as in \cite{pnmol}\footnote{Here, the authors use it to model uncertainty in the ODE description itself, which can stem from coarse discretization of an underlying PDE or from left out terms}.
 Each $O_i$ is a function of only the state $\vec{U}_i$, and so the extended Bayesian Network takes the following form
 \begin{figure}[ht]
     \centering
@@ -179,6 +176,7 @@ To get a sense of the usual prior distributions used in probabilistic numerical 
     \begin{center}
         \includegraphics[width=\columnwidth]{../images/conditioned_ous.png}
         \captionof{figure}{Draws from the Integrated Wiener Process, Conditioned}
+        \label{fig:ous}
     \end{center}
     The Ornstein-Uhlenbeck Process depends on rate parameter $a>0$. In terms of eq. \ref{eq:LSDE_definition} its state-space representation is 1-dimensional with $$F=-a  \hspace{1cm}L=1$$ 
     The Integrated Ornstein-Uhlenbeck is the integral of the Ornstein-Uhlenbeck. The state-space representation is 2-dimensional with $$F=\begin{bmatrix}
@@ -324,7 +322,7 @@ We implement our solver in JAX \cite{jax}, which is a Python library for automat
 \textit{"Roughly speaking, the condition number states how much precision is lost when inverting a matrix and the larger the number, the more precision is lost. Huge condition numbers render the solution of linear systems practically infeasible."} - from \cite{nicoThesis}
 
 \definition{Improving Numerical Stability, generalized Cholesky factors}{
-In \cite{nicoThesis} they suggest using generalized Cholesky factors of the covariance matrix to improve numerical stability. Generalized Cholesky Factors always exist for symmetric, positive semidefinite matrices\footnote{The covariance matrices are usually positive definite, but it will be semidefinite when some part of state is deterministic.}. A covariance matrix $\Sigma\in \reals^{n \times n}$ can be factored as $\Sigma =  CC^\top$ where $C = \Sigma^{(1/2)} \in \reals^{n\times n}$ is a lower triangular matrix. A multivariate Gaussian distribution is then parameterized by a mean vector and the generalized Cholesky factor of the covariance matrix. 
+In \cite{nicoThesis} they suggest using generalized Cholesky factors \cite{choleskyQR} of the covariance matrix to improve numerical stability. Generalized Cholesky Factors always exist for symmetric, positive semidefinite matrices\footnote{The covariance matrices are usually positive definite, but it will be semidefinite when some part of state is deterministic.}. A covariance matrix $\Sigma\in \reals^{n \times n}$ can be factored as $\Sigma =  CC^\top$ where $C = \Sigma^{(1/2)} \in \reals^{n\times n}$ is a lower triangular matrix. A multivariate Gaussian distribution is then parameterized by a mean vector and the generalized Cholesky factor of the covariance matrix. 
 \\
 \cite{nicoThesis} give the full description of how, given a Cholesky parameterization of $X \sim \mathcal{N}(x; Ax + b, \Sigma)$ and $Y \;\big|\; X=x \sim \mathcal{N}(y; Cx + d, \Sigma)$, one can compute the posterior $P(X | Y)$, marginal $P(Y)$ and the likelihood $P(Y | X)$ in closed form, all without having to form the covariance matrix. This sidesteps the numerical instability of the covariance matrix.
 }\noindent

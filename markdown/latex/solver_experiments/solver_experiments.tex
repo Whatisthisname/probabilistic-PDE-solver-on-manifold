@@ -4,7 +4,7 @@
     \begin{document}
 \fi
 \noindent
-Here, we give some demonstrations of the Laplacian matrices we have built, solved with built PN solver from chapter \ref{sec:prior}. We will use the colormap in figure \ref{fig:colorbar} for all figures in this section.
+In this second-to-last chapter, we give demonstrations of the Laplacian matrices we have built, solved with built PN solver from chapter \ref{sec:prior}. We will use the colormap in figure \ref{fig:colorbar} for all figures in this section.
 \\
 \begin{center}
     \includegraphics[width=1.0\columnwidth]{../images/colorbar.png}
@@ -13,7 +13,6 @@ Here, we give some demonstrations of the Laplacian matrices we have built, solve
 \end{center}
 \noindent
 
-\section{Demonstrations}
 \subsection*{Solving the Poisson Problem}
 Here we demonstrate the Laplacians built one some meshes. These are solutions of the Poisson problem on the 2D surface of various shapes - since they are not time-varying, they will not be solved using our PN solver, but can be solved by a linear solver. The Poisson problem is given by:
 \begin{align}
@@ -89,7 +88,7 @@ The four stacked planes in figure \ref{fig:bell_wave}, show the solution of the 
 \end{center}
 
 \section{Experiments with Physically Informed Priors}
-As problems to study, we choose a nonlinear version of the heat (\ref{eq:nonlinear_heat}) and wave (\ref{eq:nonlinear_wave}) equation, with varying degrees of nonlinearity. 
+In this final short chapter, we will demonstrate the efficiency of the probabilistic solver when using physically informed priors. As problems to solve, we choose a nonlinear version of the heat (\ref{eq:nonlinear_heat}) and wave (\ref{eq:nonlinear_wave}) equation, with varying degrees of nonlinearity. 
 \begin{align}
     \frac{\partial}{\partial t}u = -\Delta u - \alpha u^2\label{eq:nonlinear_heat}
 \end{align}
@@ -204,28 +203,28 @@ The problems will be solved on the 2D surface of the sphere, approximated by a 1
 See figures \ref{fig:heat} through \ref{fig:wave big} for all work/precision diagrams. In the figures, the integrated wiener process is depicted in green, the integrated wave process in blue, and the integrated heat process in red. The x-axis shows the number of timesteps in the discretized prior ($|\mathbb{T}|$), and the y-axis shows the root-mean-square-error. As the number of steps increase, the error generally decreases. For increasing $q$, the error drops faster.
 \\ The integrated Wiener processes are generally being outperformed, however less decisively so for significant nonlinearities ($a = 1$). For $a=0$ the expected exact solution of the priors is observed, even for $10$ timesteps, massively outperforming the integrated Wiener process (but this was not a fair competition).
 \\ The result confirm that an appropriate prior process gives the solver an inductive bias that helps solve the ODEs more exactly and efficiently.
-\begin{figure}
+\begin{center}
     \includegraphics[width=\columnwidth]{../images/solver_heat.png}
-    \caption{}
+    \captionof{figure}{}
     \label{fig:heat}
     \includegraphics[width=\columnwidth]{../images/solver_heat and medium square.png}
-    \caption{}
+    \captionof{figure}{}
     \label{fig:heat medium}
     \includegraphics[width=\columnwidth]{../images/solver_heat and big square.png}
-    \caption{}
+    \captionof{figure}{}
     \label{fig:heat big}
-\end{figure}
-\begin{figure}
+\end{center}
+\begin{center}
     \includegraphics[width=\columnwidth]{../images/solver_wave.png}
-    \caption{}
+    \captionof{figure}{}
     \label{fig:wave}
     \includegraphics[width=\columnwidth]{../images/solver_wave and medium tan.png}
-    \caption{}
+    \captionof{figure}{}
     \label{fig:wave medium}
     \includegraphics[width=\columnwidth]{../images/solver_wave and big tan.png}
-    \caption{}
+    \captionof{figure}{}
     \label{fig:wave big}
-\end{figure}
+\end{center}
 
 
 \ifdefined\COMPILINGFROMMAIN
