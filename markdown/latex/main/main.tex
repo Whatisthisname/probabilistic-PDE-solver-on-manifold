@@ -2,8 +2,8 @@
 \def\COMPILINGFROMMAIN{}
 \begin{document}
 
-\title{Two-Column Layout Example}
-\author{Theo Computer Scientist}
+\title{On Probabilistic Numerical Solvers for Partial Differential Equations on Riemannian Manifolds}
+\author{Theo Rüter Würtzen }
 \date{\today}
 \maketitle
 
@@ -28,27 +28,27 @@ We have structured the thesis as a guide on how to implement and follow the resu
 \section{Overview}\label{sec:overview}
 \input{../summary/summary.tex}
 
-\newpage
-\section{Riemannian Manifolds and Discrete Exterior Calculus}\label{sec:manifolds}
-\input{../geometry/geometry.tex}
+% \newpage
+% \section{Riemannian Manifolds and Discrete Exterior Calculus}\label{sec:manifolds}
+% \input{../geometry/geometry.tex}
 
-\newpage
-\section{Partial Differential Equations and the Method of Lines}\label{sec:pde}
-\input{../pde/pde.tex}
+% \newpage
+% \section{Partial Differential Equations and the Method of Lines}\label{sec:pde}
+% \input{../pde/pde.tex}
 
-\newpage
-\section{Probabilistic Numerical Solver for ODEs}\label{sec:prior}
-\input{../prior/prior.tex}
+% \newpage
+% \section{Probabilistic Numerical Solver for ODEs}\label{sec:prior}
+% \input{../prior/prior.tex}
 
-\newpage*
-\newpage
-With a long introduction to the topics of this thesis out the way, we can move to some contributions. The first contribution is an algorithm to build an intrinsic triangulation of manifolds provided only a metric tensor. This lets one apply the methods of discrete exterior calculus to obtain a discrete Laplacian, which can subsequently be used in the Method of Lines to solve PDEs, either using standard solvers or probabilistic solvers. The algorithm is detailed in the next section
-\section{Building an Intrinsic Triangulation from a Metric}\label{sec:intrinsic_triangulation}
-\input{../intrinsic_triangulation/intrinsic_triangulation.tex}
+% \newpage
+% \newpage
+% With a long introduction to the topics of this thesis out the way, we can move to some contributions. The first contribution is an algorithm to build an intrinsic triangulation of manifolds provided only a metric tensor. This lets one apply the methods of discrete exterior calculus to obtain a discrete Laplacian, which can subsequently be used in the Method of Lines to solve PDEs, either using standard solvers or probabilistic solvers. The algorithm is detailed in the next section
+% \section{Building an Intrinsic Triangulation from a Metric}\label{sec:intrinsic_triangulation}
+% \input{../intrinsic_triangulation/intrinsic_triangulation.tex}
 
-\newpage
-\section{Benchmarking and Experiments with the Solver}\label{sec:solver_experiments}
-\input{../solver_experiments/solver_experiments.tex}
+% \newpage
+% \section{Benchmarking and Experiments with the Solver}\label{sec:solver_experiments}
+% \input{../solver_experiments/solver_experiments.tex}
 
 \printbibliography
 

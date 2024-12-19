@@ -53,6 +53,7 @@ The solution of the LTI SDE is a Gaussian Process with the above mean and covari
     \begin{center}
         \includegraphics[width=\columnwidth]{../images/stochastic_spring_samples.png}
         \captionof{figure}{25 samples from the linear SDE describing the stochastic spring model with random independent force. The random force has $\sigma = 0.1$ and we have $k=1$, $l=0.2$.}
+        \label{fig:spring_model}
     \end{center}
 }
 
@@ -112,7 +113,7 @@ This is an instance of a Linear Gaussian Model \cite{koller_bn}, which is a trac
 \end{figure}
 \subsection*{Using the distribution as a Prior}
 To use the discrete-time distribution of functions as a prior distribution, we need to integrate further information into the system that we can then update the prior with. We will extend the Bayesian network with potential observations $O_i$ of each state $\vec{U}_i$. Although we might not know the complete state at each instant, there might be properties that we do know, such as the derivative of the function at some time. 
-\\ To build on the network in fig. \ref{fig:finite_time_states}, we will define the conditional distributions of a partial observations of some of the time instances. These partial observations at time $i$ are expressed as $O_i \sim \mathcal{N}(m(\vec{U}_i), \Sigma_m)$, where $m$ is a linear\footnote{The measurement model has to be a linear function of the state, as the joint distribution will only be multivariate Gaussian under linear transformations.} function of $\vec{U}_i$. $m$ can be thought of as a measurement model, but this interpretation brings along physical assumptions that are not always helpful. We will usually have $\Sigma_m = \mathcal{0}$\footnote{This case is reffered to as the "Dirac Likelihood" \cite{exponential_probabilistic} because it places all mass on a single event.}, but nonzero noise can be useful, as in \cite{pnmol}\footnote{Here, the authors use it to model uncertainty in the ODE description itself, which can stem from coarse discretization of an underlying PDE or from left out terms}.
+\\ To build on the network in fig. \ref{fig:finite_time_states}, we will define the conditional distributions of a partial observations of some of the time instances. These partial observations at time $i$ are expressed as $O_i \sim \mathcal{N}(m(\vec{U}_i), \Sigma_m)$, where $m$ is an affine\footnote{The measurement model has to be a linear function of the state, as the joint distribution will only be multivariate Gaussian under linear transformations.} function of $\vec{U}_i$. $m$ will be thought of as a measurement model, although this interpretation can bring along physical assumptions that are not always helpful. We will usually have $\Sigma_m = \mathcal{0}$\footnote{This case is reffered to as the "Dirac Likelihood" \cite{exponential_probabilistic} because it places all mass on a single event.}, but nonzero noise can be useful, as in \cite{pnmol}\footnote{Here, the authors use it to model uncertainty in the ODE description itself, which can stem from coarse discretization of an underlying PDE or from left out terms}.
 Each $O_i$ is a function of only the state $\vec{U}_i$, and so the extended Bayesian Network takes the following form
 \begin{figure}[ht]
     \centering
@@ -151,10 +152,9 @@ Each $O_i$ is a function of only the state $\vec{U}_i$, and so the extended Baye
 
 The specific choice of measurement model will depend on the problem. It can abstractly be modeled as the Information Operator.
 \definition{Information Operator}{
-    The Information Operator (\cite{information_operator}) is a measurement model that maps specific functions of interest to zero. Zero is an arbitrary choice made for convenience, it could have been any other number. Information operators are generally not linear, but they can, using the Jacobian, be linearized around the predicted mean of the unobserved state, given the previous (linearized) measurements. This is a topic for the Kalman Filter section.
+    The Information Operator (\cite{information_operator}) is a measurement model that maps specific functions of interest to zero. Zero is an arbitrary choice made for convenience, it could have been any other number. Information operators are generally not affine, but they can, using the Jacobian, be linearized around the predicted mean of the unobserved state with a first order Taylor approximation. This is a topic for the Kalman Filter section.
 }
 To get a sense of the usual prior distributions used in probabilistic numerical solvers, we will introduce two common choices, the Integrated Wiener process, and the Integrated Ornstein-Uhlenbeck process.
-\newpage
 \definition{Integrated Wiener Process}{
     \begin{center}
         \includegraphics[width=\columnwidth]{../images/conditioned_iwps.png}
@@ -175,7 +175,6 @@ To get a sense of the usual prior distributions used in probabilistic numerical 
     \end{bmatrix}$$
     \\ The posterior means of the $q$-times integrated Wiener process are 2q + 1-ic splines (\cite{probnum}) - see the figure above. There is in principle nothing preventing us from using higher order integrated Wiener processes, but numerical issues can be encountered already at $q=3$. We will tackle this later.
 }
-\newpage
 \definition{Ornstein Uhlenbeck Process}{
     \begin{center}
         \includegraphics[width=\columnwidth]{../images/conditioned_ous.png}
@@ -221,10 +220,9 @@ Defining the state projection matrices will be helpful for notation. They appear
     For an example linear ODE $$\frac{d^2}{dt^2}U(t) = AU(t)$$ it is defined as 
     $$\mathcal{R}\vec{U}(t) = E_2\vec{U}(t) - AE_0\vec{U}(t) \in \reals^n$$ which is expressing residual of the ODE in terms of the state-space representation. A solution of the ODE will have $\mathcal{R}\vec{U}(t) = \mathbf{0}$.
 }
-If definition of $\mathcal{R}\vec{U}(t)$ refers to some derivative $E_q$, then the prior distribution must model at least $q$ derivatives for it to make sense. The residual operator can be used to encode linear PDEs as well.
-
-By conditioning the prior residual of $\mathcal{R}\vec{U}(t)$ to be zero at all times $t \in \mathbb{T}$, we are "applying a filter", forcing the state-space representation of the function to satisfy the ODE. The associated conditional distribution of the residual operator is deterministic and given as $$O_i \sim \mathcal{N}(E_2\vec{U}(t) - AE_0\vec{U}(t), \Sigma_h)$$
-
+If definition of $\mathcal{R}\vec{U}(t)$ refers to some derivative $E_q$, then the prior distribution must model at least $q$ derivatives for it to be defined. By conditioning the prior residual of $\mathcal{R}\vec{U}(t)$ to be zero at all times $t \in \mathbb{T}$, we are "weeding out" the functions that surely do not satisfy the ODE, forcing the state-space representation of the function to satisfy the ODE. The associated observation model with the residual operator as measurement function is deterministic and given as $$O_i \sim \mathcal{N}(E_2\vec{U}(t) - AE_0\vec{U}(t), \Sigma_h)$$
+\\
+The residual operator can be used to encode linear \textit{PDEs} as well:
 \example{More examples of Residual Measurement for PDEs}{
     One can also encode PDEs with the residual operator by first converting it to an ODE using the method of lines. We will convert the examples from section \ref{sec:pde}. 
     \begin{center}
@@ -266,16 +264,14 @@ By conditioning the prior residual of $\mathcal{R}\vec{U}(t)$ to be zero at all 
         % END
     \end{tabular}
     \end{center}
-    One is however not restricted to linear PDEs, as we can linearize the information operator around the predicted mean of the unobserved state in the Kalman Filter. We can therefore more generally define the residual measurement $\mathcal{R}\vec{U}(t)$ for a nonlinear PDEs $$\frac{\partial^q}{\partial t^q}u = f(u)$$ as the nonlinear measurment function $$\mathcal{R}\vec{U}(t) = E_q\vec{U}(t) - f\left(\vec{U}(t)\right)$$
 }
 
 \example{Function Values at specific times}{
-    How did we generate the figures in fig.\ref{fig:iwps} and get the posterior to pass through the initial four points? For the twice integrated scalar Wiener Process, we choose an initial distribution $\vec{U}(0) \sim \mathcal{N}(\mathbf{0}^3, \mathbf{0}^{3 \times 3})$ and define the linear observation function $h(\vec{U}_i) = E_0\vec{U}_i \in \reals$ with $E_0 = [1 \;\; 0 \;\; 0]^\top$. 
+    How did we generate the figures in fig.\ref{fig:iwps} and get the posterior to pass through the initial four points? For the twice integrated scalar Wiener Process, we choose an initial distribution $\vec{U}(0) \sim \mathcal{N}(\mathbf{0}^3, \mathbf{0}^{3 \times 3})$ and define the affine observation function $h(\vec{U}_i) = E_0\vec{U}_i \in \reals$ with $E_0 = [1 \;\; 0 \;\; 0]^\top$. 
     \\
     The four blue points $P_t \in \reals$ at times $t\in\{0, \frac{1T}{8}, \frac{2T}{8}, \frac{3T}{8}\}$ are reflected in the posterior by conditioning the prior on the data points $E_0\vec{U}_t = P_t$. The posterior will then pass through these points. The derivative is however not specified, and which lets the prior "speak" and impose regularity \footnote{$C^2$ regularity for the twice integrated Wiener Process}. 
 }
-We have so far postponed the actual task of computing the posterior. This is up next.
-
+We have so far postponed the actual task of computing the posterior. This is what we will cover now.
 \subsection*{Kalman Filter and Rauch-Tung-Striebel Smoother}
 The sparse connections of the Gaussian Bayesian network in fig. \ref{fig:full_bayesian_network} can be exploited. Together, the Kalman Filter and RTS Smoother form a message passing algorithm (\cite{koller_bn}) for computing the conditional distribution of linear Gaussian models. 
 The chain-structure allows for a very efficient ordering of the messages, going from $i=0$ to $i=|T|$ in a forward pass and from $i=|T|$ to $i=1$ in a backward pass. 
@@ -292,54 +288,73 @@ The chain-structure allows for a very efficient ordering of the messages, going 
     which is the posterior of the final state given information about \textit{all} the observations (since there are no future observations). If one is interested only in the posterior at the final time, then the Kalman Filter forward pass is enough. 
 }
 The term "filter" refers to accumulating [uncertain] information about past states into some estimate of the current state. An exponential moving average is also a filter.
+\example{Choosing the noise scale $\sigma^2$}{
+    In our definition of the prior LTI SDE, we left the parameter $\sigma$ unspecified. This parameter is the noise scale, and it is a hyperparameter that must be chosen. \cite{nicoThesis} derives a maximum likelihood estimate of $\sigma$, which can be computed cheaply during the forward pass. The issues of hand-tuning $\sigma$ are therefore mitigated, and the $\sigma$ that maximises the probability of the observations is chosen. Our implementation uses this method.
+}
 
 \definition{Backward Pass, Rauch-Tung-Striebel Smoother}{
     The RTS smoother \cite{rts} runs a backward pass that computes the full posterior distribution of the states, given the output from the Kalman filter forward pass.
     \begin{align}\label{eq:kalman_forward_pass}
-        p\left(\vec{U}_i \;\Big|\; o_{1:|\mathbb{T}|}\right) \hspace{5mm} i\in\{|T|, \dots, i\}
+        p\left(\vec{U}_i \;\Big|\; o_{1:|\mathbb{T}|}\right) \hspace{5mm} i\in\{|T|, \dots, 0\}
     \end{align}
+    This is the marginal posterior distribution of each state, given all observations.
 }
-
-\example{Sampling Solutions}{
+\example{Sampling the Posterior}{
     The forward pass can additionally produce the "backwards" conditional distributions
-    $$p\left(\vec{U}_{i} \;\Big|\; \vec{U}_{i+1}, o_{1:i}\right)$$ which defines a chain-structured Bayesian network like fig \ref{fig:finite_time_states}, with the arrows pointing in the reverse direction. One can then use ancestral sampling, starting with a sample from \ref{eq:terminal_time_posterior} and sampling from the backwards distributions to get a sample from the full posterior. Ancestral sampling involves iterating through the states in the backwards direction, and is thus best left for the backward pass.
+    $$p\left(\vec{U}_{i} \;\Big|\; \vec{U}_{i+1}, o_{1:i}\right)$$ which defines a chain-structured Bayesian network like fig \ref{fig:finite_time_states}, with the arrows pointing in the reverse direction. One can then use ancestral sampling, starting with a sample from \ref{eq:terminal_time_posterior} and sampling from the backwards distributions to get a sample from the full posterior. Ancestral sampling involves iterating through the states in the backwards direction, and is thus best left for the backward pass. This is how we draw posterior sample in figures \ref{fig:iwps} and \ref{fig:ous}.
 }
 After a forwards and backwards pass, all information about the observations $O_i$ has reached every state, which ensure that the final distribution reflects the posterior distribtution given all observations, not just the preceding observations.
-
-Together, they facilitate computing the posterior in time $O(|\mathbb{T}|n^3)$ (\cite{invention_of_ODE_solver}), where $n$ is the size of the state. Note the linear dependence on amount of timesteps, which is also present in classical numerical solvers (\cite{probnum}). It is remarkable that the same can be achieved while additionally modeling the full posterior distribution.
-We mentioned that the measurement function has to be linear 
+\\
+Together, they facilitate computing the posterior in time $O(|\mathbb{T}|n^3)$ (\cite{invention_of_ODE_solver}), where $n$ is the size of the state. Note the linear dependence on amount of timesteps, which is also present in classical numerical solvers (\cite{probnum}). It is remarkable that the same can be achieved while additionally modeling the full posterior distribution. 
+\\
+We mention that the measurement function has to be linear, and therefore kept the examples of the information operator linear as well. To break free from the restraints of linear PDEs, we will make use of the Extended Kalman Filter forward pass. 
 \definition{Forward Pass, Extended Kalman Filter}{
-    Extended Kalman Filter (\cite{probnum}, \cite{nicoThesis}, \cite{information_operator}).
+    The Extended Kalman Filter is used extensively in robotics and control \cite{probnum}, but is also applicable for nonlinear PDEs (\cite{nicoThesis}, \cite{information_operator}), which are arguably the more interesting case.\\
+    As mentioned, the observation model is of the form 
+    $$O_i \;|\; \vec{u}_i \sim \mathcal{N}(m(\vec{u}_i), \Sigma_m)$$
+    and requires an affine $m$. For a nonlinear measurement function $n$, we will adaptively update $n$ to be affine during the forward pass by Taylor-expanding it around the most recent believed mean of state $\vec{U}_i$, $\bar{u_i} = \mathbb{E}[\vec{U}_i \;|\; o_{1:{i-1}}]$\footnote{This conditional distribution is obtained by applying eq. \ref{eq:discrete_time_recurrence} with eq. \ref{eq:kalman_forward_pass} and marginalizing.}. The Taylor approximation of $n$ at time $i$ becomes 
+    $$\bar{n_i}(u) = n(\bar{u_i}) + J(\bar{u_i})(y) - J(n)(\bar{u})$$ 
+    with $J$ the Jacobian matrix of $n$. It will be the most accurate around the prior mean. With this adaptive measurement function defined, one can use the classic forward Kalman filter forward pass with the conditional distribution
+    $$O_i \;|\; \vec{u}_i \sim \mathcal{N}((\bar{n_i}(\vec{u}_i)), \Sigma_m)$$
+    \\
+    Because we can linearize the (assumed to be differentiable) Information operator, we can more generally define the residual measurement $\mathcal{R}\vec{U}(t)$ for a nonlinear PDEs $$\frac{\partial^q}{\partial t^q}u = f(u)$$ as the nonlinear measurement function $$\mathcal{R}\vec{U}(t) = E_q\vec{U}(t) - f\left(\vec{U}(t)\right)$$ The Extended Kalman filter then takes care of interpreting this as an affine function of the state using automatic differentiation.
 }
+\subsubsection*{More Implementation Details}
+We implement our solver in JAX \cite{jax}, which is a Python library for automatic differentiation and high performance numerical linear algebra. It further allows just-in-time compilation of functional programs, which greatly speeds up all procedures by vectorizing and parallelizing where possible. With 64-bit floating point precision, one might hope that the numerical stability of the solver would not an issue. However, the covariance matrices that are formed in the Kalman Filter and RTS Smoother can have very poor condition numbers, which can lead to numerical instability. The covariance matrix generally stores entries that are the square of the length-scale of the state. For small timesteps, the standard deviation in the conditional distribution between states will be small, and the covariance matrix in \ref{eq:hard_matrix_exponential} will contain the square of this small number. This can lead to vanishingly small entries in the covariance matrix that worsen the condition number. \\
+\textit{"Roughly speaking, the condition number states how much precision is lost when inverting a matrix and the larger the number, the more precision is lost. Huge condition numbers render the solution of linear systems practically infeasible."} - from \cite{nicoThesis}
 
-\example{Choosing the noise scale $\sigma^2$}{
-    In our definition of the prior LTI SDE, we left the parameter $\sigma$ unspecified. This parameter is the noise scale, and it is a hyperparameter that must be chosen. The author of \cite{nicoThesis} derives a maximum likelihood estimate of $\sigma$, which can be computed cheaply during the forward pass. The issues of hand-tuning $\sigma$ are therefore mitigated, and the $\sigma$ that maximises the probability of the observations is chosen. The implementation in this thesis uses this method.
+\definition{Improving Numerical Stability, generalized Cholesky factors}{
+In \cite{nicoThesis} they suggest using generalized Cholesky factors of the covariance matrix to improve numerical stability. Generalized Cholesky Factors always exist for symmetric, positive semidefinite matrices\footnote{The covariance matrices are usually positive definite, but it will be semidefinite when some part of state is deterministic.}. A covariance matrix $\Sigma\in \reals^{n \times n}$ can be factored as $\Sigma =  CC^\top$ where $C = \Sigma^{(1/2)} \in \reals^{n\times n}$ is a lower triangular matrix. A multivariate Gaussian distribution is then parameterized by a mean vector and the generalized Cholesky factor of the covariance matrix. 
+\\
+\cite{nicoThesis} give the full description of how, given a Cholesky parameterization of $X \sim \mathcal{N}(x; Ax + b, \Sigma)$ and $Y \;\big|\; X=x \sim \mathcal{N}(y; Cx + d, \Sigma)$, one can compute the posterior $P(X | Y)$, marginal $P(Y)$ and the likelihood $P(Y | X)$ in closed form, all without having to form the covariance matrix. This sidesteps the numerical instability of the covariance matrix.
+}\noindent
+As an approximation, using generalized Cholesky factors representation allowed us to take $\times 1.5$ more steps with the solver before numerical instability invalidated the results. It however turns out that the covariance matrix is still ill-conditioned due to an orthogonal issue. The matrix $Q$ depends still on the step-size $h$ in \ref{eq:hard_matrix_exponential}. In the case of the integrated Wiener process, for $q$ derivatives, the condition number grows at least as $2^q$ an in practice is worse for low $h$, yielding entries down to $10^{-40}$ for $q=3, h=0.0001$ (\cite{nicoThesis}). 
+\definition{Improving Numerical Stability, Preconditioning}{
+    As argued and solved in \cite{nicoThesis}, $Q$ should not depend on the length of the time step. They give an invertible linear coordinate transformation $T$ to the SDE, which will remove this dependency. Because we are working with LTI SDEs, this transformation can be applied at the SDE level to the matrices as $TFT^{-1}$ and $TLL^\top$. It can then be undone at the end of the backward pass to get the posterior in the original state-space.
+    \\
+    The transformation is derived for the integrated Wiener process, but when implementing it in the thesis and applying it to other LTI SDEs we were still able to model up to 10 derivatives in all processes instead of the previous 3. This is a significant improvement and unlocks the possibility of using higher order integrated processes.
 }
-\example{Improving Numerical Stability, generalized Cholesky factors}{
-    In \cite{nicoThesis} they suggest using generalized Cholesky factors of the covariance matrix to improve numerical stability.
-    Generalized Cholesky Factors always exist for symmetric, positive semidefinite matrices\footnote{The covariance matrices are usually positive definite, but it will be semidefinite when some part of state is deterministic.}. A covariance matrix $\Sigma\in \reals^{n \times n}$ is factored as $\Sigma =  CC^\top$ where $C = \Sigma^{(1/2)} \in \reals^{n\times n}$ is a lower triangular matrix. A multivariate Gaussian distribution is then parameterized by a mean vector and the generalized Cholesky factor of the covariance matrix. 
-    \\\cite{nicoThesis} additionally give a full description of how, given a cholesky parameterization of $X \sim \mathcal{N}(x; Ax + b, \Sigma)$ and $Y \;\big|\; X=x \sim \mathcal{N}(y; Cx + d, \Sigma)$, one can compute the posterior $P(X | Y)$, marginal $P(Y)$ and the likelihood $P(Y | X)$ in closed form, all without having to form the covariance matrix.
+The first state and derivatives can be informed by the vector field $f$ - if the DE is of the form $\frac{d}{dt}u = f(u)$, we immediately get the expression for the first derivative as $f(u(0))$. If however the DE is of the from $\frac{d^2}{dt^2}u = f(u)$, we cannot extract the initial derivative, and it is considered in input value, like the initial value $u(0)$. As will also be explored further in chapter \ref{sec:solver_experiments}, one can repeatedly differentiate the vector field to get further derivatives of the initial state.\\
+\definition{Initialization, Taylor-mode automatic differentiation}{
+    If using automatic differentiation, one first has to compute the Jacobian, then the Hessian and so on for higher derivatives. The complexity of this grows exponentially with the order of the derivative as $O(2^q)$ \cite{nicoThesis}. Instead they propose using Taylor-mode automatic differentiation \cite{taylor_mode}, \cite{taylor_mode_jax} to get the higher derivatives w.r.t. time, which grows as $O(\exp(\sqrt{q}))$. Our implementation uses Taylor-mode automatic differentiation function from Python library \texttt{probdiffeq} \cite{nicoThesis} to initialize the higher derivatives for the experiments to come. 
 }
-\example{Improving Numerical Stability, Preconditioning}{
-    The matrix $Q$ depends on the step-size $h$ in \ref{eq:hard_matrix_exponential} or when using matrix fraction decomposition. For $q$ derivatives, the smallest entry in $Q$ is proportional to $h^{2q+1}$ which quickly becomes very small for small and tiny $q$, which leads to huge condition numbers, leading to numerically unstable processing. As argued and solved in \cite{nicoThesis}, $Q$ should not depend on the length of the time step. They suggest a coordinate transformation to the SDE, which will removes this dependency. When implementing this method in the thesis, we were able to model up to 10 derivatives in all processes instead of the previous 3.
+\newpage
+\example{Solving the Damped Harmonic Oscillator}{
+
+    Finally, we want to give an example of a solving the damped harmonic oscillator with our probabilistic numerical solver. We solve the ODE $$\frac{d^2}{dt^2}u = -0.3\frac{d}{dt}u - 1.5u$$ with initial conditions $u(0) = 1$ and $\frac{d}{dt}u(0) = 0$.
+    \\
+    We show the posterior distribution of the 4-times integrated Wiener process after being initialized using Taylor-mode automatic differentiation and conditioning on the PDE residual 
+    $$\mathcal{R}(\vec{U}) = \vec{U}_2 + 0.3\vec{U}_1 + 1.5\vec{U}_0$$
+    of the damped harmonic oscillator being zero. To show the effect of using a higher order integrated prior, we condition only at five timesteps, show as blue dots\footnote{The vertical position of the blue dots has no meaning and is arbitrarily placed on the mean of the process. We are \textit{not} conditioning the process to pass through these points, unlike in figures \ref{fig:iwps}}. The true solution is shown in red and is computed using the matrix exponential (eq. \ref{eq:matrix_exp}).
+    \begin{center}
+        \includegraphics[width=\columnwidth]{../images/solving_damped_spring_small_state.png}       
+        \captionof{figure}{Probabilistic numerical solution of the damped harmonic oscillator ODE. We are using a 2-times integrated Wiener process as prior. Note the increasing irregularity of the state components as we inspect higher derivates which have been integrated less frequently. The highest derivative here, $\vec{u}_2$, is no longer differentiable.}
+    \end{center}
+    \begin{center}
+        \includegraphics[width=\columnwidth]{../images/solving_damped_spring_big_state.png}
+        \captionof{figure}{The same type of figure as above, but we are using a 4-times integrated Wiener process as the prior. We have conditioned on the same observations as in the previous figure, but there is much less uncertainty about the solution $\vec{u}_0$.}  
+    \end{center}
 }
-
-\subsection*{Solving ODEs with the Prior}
-\subsubsection*{Choosing the initial state of the system}
-The first state and derivatives can be often be informed by the vector field - if the DE is of the form $\frac{d}{dt}u = f(u)$, we immediately get the expression for the first derivative as $f(u(0))$. If however the DE is of the from $\frac{d^2}{dt^2}u = f(u)$, we cannot extract the initial derivative, and it is considered in input value, like the initial value $u(0)$.
-
-\definition{Taylor-mode automatic differentiation}{}
-    
-\subsection*{Hypothesis: Heat Prior, Wave Prior}
-\definition{Heat Prior, Wave Prior}{What is it?}
-\example{Encoding Prior Dynamics: Wave Process}{
-\begin{center}
-    \includegraphics[width=\columnwidth]{../images/conditioned_waves.png}
-    \captionof{figure}{Draws from the Integrated Wiener Process, Conditioned}
-\end{center}
-}
-
-
 
 \ifdefined\COMPILINGFROMMAIN
 \else    

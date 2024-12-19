@@ -3,225 +3,207 @@
     \input{../header.tex}
     \begin{document}
 \fi
-\section{Demonstrations}
-\begin{figure*}[t]
-    \includegraphics[width=1.0\textwidth]{../images/colorbar.png}
-    \caption{Colorbar for the figures in this section, using the perceptually uniform \texttt{viridis} \cite{viridis} colormap. The associated scalar values will generally not be exactly given, as they are not important for the interpretation of the figures. However, generally, dark value are negative, light values are positive, and the midpoint is zero.}
-\end{figure*}
 \noindent
-Here, we give some demonstrations of the Laplacian matrices we have built, solved with built PN solver from chapter \ref{sec:prior}.
+Here, we give some demonstrations of the Laplacian matrices we have built, solved with built PN solver from chapter \ref{sec:prior}. We will use the colormap in figure \ref{fig:colorbar} for all figures in this section.
+\\
+\begin{center}
+    \includegraphics[width=1.0\columnwidth]{../images/colorbar.png}
+    \captionof{figure}{Colorbar for the figures in this section, using the perceptually uniform \texttt{viridis} \cite{viridis} colormap. The associated scalar values will generally not be exactly given, as they are not important for the interpretation of the figures. However, generally, dark value are negative, light values are positive, and the midpoint is zero.}
+    \label{fig:colorbar}
+\end{center}
+\noindent
 
+\section{Demonstrations}
 \subsection*{Solving the Poisson Problem}
 Here we demonstrate the Laplacians built one some meshes. These are solutions of the Poisson problem on the 2D surface of various shapes - since they are not time-varying, they will not be solved using our PN solver, but can be solved by a linear solver. The Poisson problem is given by:
 \begin{align}
     -\Delta u = f
 \end{align}
 On a mesh with the discrete Laplacian $L$, this reduces to finding the vector $u$ such that $Lu = f$, which is straightforward to solve with numerical linear algebra tools. For this example, we solve the Poisson problem on a model of a twisty section of kelp. The curvature of the kelp is encoded in the Laplacian matrix. Since this two-dimensional surface has a boundary, we must specify boundary conditions: We set both opposing pairs of edges to the same color, some positive and negative value, respectively (Dirichlet boundary conditions). The solution is illustrated in figure \ref{fig:helix}. The topmost figure shows the boundary conditions (the interior is set to zero for this visualization). The middle figure shows the force $f$, which is a positive Gaussian bell on the interior. The bottommost figure shows the computed solution, which satisfies the hot/cold boundary conditions, while the interior satisfies the curvature dictated by $f$.
-\begin{figure}[!h]
-    %\centering
-    \includegraphics[width=0.8\columnwidth]{../images/helix_BC.png}\vspace*{-50mm}
-    \hspace*{20mm}\includegraphics[width=0.8\columnwidth]{../images/helix_force.png}\vspace*{-50mm}
-    \includegraphics[width=0.8\columnwidth]{../images/helix_solution.png}%\vspace*{-50mm}
-    \caption{}
+
+\begin{figure}
+    \includegraphics[width=0.95\linewidth]{../images/helix_BC.png}
+    \includegraphics[width=0.95\linewidth]{../images/helix_force.png}    
+    \includegraphics[width=0.95\linewidth]{../images/helix_solution.png}
+    \captionof{figure}{}
     \label{fig:helix}
 \end{figure}
 
+
 \subsection*{Solving the Heat Equation}
 As a demonstration, using the probabilistic solver, we solve the heat equation on the sphere, using the twice-integrated Wiener process. The speed of diffusion is linked to the Laplacians matrix $L$, which in turn depends on the scale of the geometry. We will therefore not give any units or specific values which are unimportant. See figure \ref{fig:heat_solution} for a demonsration of the solver. In figure can additionally get the joint distribution of the solution and show the uncertainties, see figure \ref{fig:heat_uncertainty}. We interpret the nonuniformity of the figure in the following way: The sphere mesh used has twelve\footnote{This mesh is created by using loop subdivision on the 12-tipped icosahedron with the \texttt{icosphere} Python package, which is a coarse approximation to the sphere geometry.} patches of vertices with incidence number 5 - in these, the solution is more certain than in the remaining ones. The Laplacian matrix will have five nonzero entries in the corresponding rows instead of six, and thus the solution here is less sensitive to the values of the neighbors. Additionally, the neighboring five vertices are spatially closer (the edge lengths are shorter), which introduces higher correlation between them.
-\begin{figure}
-    \centering
-    \includegraphics[width=0.9\columnwidth]{../images/sphere_entropic.png}\vspace*{3mm}
-    \includegraphics[width=0.9\columnwidth]{../images/sphere_smoothed.png}\vspace*{3mm}
-    \includegraphics[width=0.9\columnwidth]{../images/sphere_cooled.png}\vspace*{3mm}
-    \caption{The heat equation solved on the sphere. Uppermost image is the initial condition, where each vertex has been assigned to $\{-1, 1\}$ uniformly at random. Subsequent images are spaced equally apart in time, illustrating the heat diffusion. Yellows are positive temperatures, blues are negative temperatures.}
-    \label{fig:heat_solution}
-\end{figure}
 
-\subsection*{The Laplacian captures the length-scale}
-We visualize the Laplacian capturing length-scales on the Utah teapot \cite{utah} has been scaled so the body of the teapot is approximately a unit sphere. Figure \ref{fig:teapot_heat_solution} shows again the heat equation initial step and a short time later. The Utah teapot has highly non-uniform dual face areas, especially around the rim at the lid. As the diffusion process is not scale-invariant is illustrated by the fact that the temperature here will smooth out much quicker than in the remaining, bigger patches.
-\begin{figure}
-    \centering
-    \includegraphics[width=0.9\columnwidth]{../images/sphere_uncertainty.png}\vspace*{3mm}
-    \caption{The marginal standard deviations of the solution at the second step in figure \ref{fig:heat_solution}. Darker colors mean lower uncertainty. The uncertainty is miniscule and has been scaled up for illustration.}
+\begin{center}
+    \begin{minipage}[b]{0.5\columnwidth}
+        \centering
+        \includegraphics[width=0.95\linewidth]{../images/sphere_entropic.png}
+    \end{minipage}%
+    % \hspace{5mm} 
+    \begin{minipage}[b]{0.5\columnwidth}
+        \centering
+        \includegraphics[width=0.95\linewidth]{../images/sphere_smoothed.png}
+    \end{minipage}
+    \includegraphics[width=0.475\columnwidth]{../images/sphere_cooled.png}\vspace*{3mm}
+    \captionof{figure}{The heat equation solved on the sphere. Upper left image is the initial temperature distribution, where each vertex has been assigned to $\{-1, 1\}$ uniformly at random. Upper right and lower image are spaced equally apart in time, illustrating the heat diffusion. Yellows are positive temperatures, blues are negative temperatures.}
+    \label{fig:heat_solution}
+\end{center}
+
+\begin{center}
+    \vspace{10mm}
+    \includegraphics[width=0.7\columnwidth]{../images/sphere_uncertainty.png}\vspace*{3mm}
+    \captionof{figure}{The marginal standard deviations of the solution at the second step in figure \ref{fig:heat_solution}. Darker colors mean lower uncertainty. The uncertainty is miniscule and has been scaled up for illustration.}
     \label{fig:heat_uncertainty}
-    \vspace*{10mm}
-    \includegraphics[width=0.9\columnwidth]{../images/teapot_entropic.png}\vspace*{3mm}
-    \includegraphics[width=0.9\columnwidth]{../images/teapot_smoothed.png}\vspace*{3mm}
-    \caption{The heat equation solved on the Utah Teapot. The initial conditions are akin to the ones in fig. \ref{fig:heat_solution} and shown in the topmost figure. Below is the heat diffusion after a short time.}
-    \label{fig:teapot_heat_solution}
-\end{figure}
+\end{center}
+
+\example{The Laplacian captures the length-scale}{   
+    We visualize the Laplacian capturing length-scales on the Utah teapot \cite{utah} has been scaled so the body of the teapot is approximately a unit sphere. Figure \ref{fig:teapot_heat_solution} shows again the heat equation initial step and a short time later. The Utah teapot has highly non-uniform dual face areas, especially around the rim at the lid. As the diffusion process is not scale-invariant is illustrated by the fact that the temperature here will smooth out much quicker than in the remaining, bigger patches.
+    \begin{center}
+        \centering
+        \includegraphics[width=0.9\columnwidth]{../images/teapot_entropic.png}\vspace*{3mm}
+        \includegraphics[width=0.9\columnwidth]{../images/teapot_smoothed.png}\vspace*{3mm}
+        \includegraphics[width=0.9\columnwidth]{../images/teapot_cooled.png}\vspace*{3mm}
+        \captionof{figure}{The heat equation being solved on the Utah Teapot. Top: The initial conditions are akin to the ones in fig. \ref{fig:heat_solution} and shown in the topmost figure. Middle: Heat diffusion after a short time. Bottom: Heat diffusion after a longer time.}
+        \label{fig:teapot_heat_solution}
+    \end{center}
+}
 
 \subsection*{Solving the Wave Equation On an Intrinsically Triangulated Surface}
 Using our algorithm from chapter \ref{sec:intrinsic_triangulation}, we use triangulate the bell-curve geometry, compute the Laplacian, and solve the wave equation on it. To motivate the expected behaviour, one can think of a wave as simply a shockwave traveling at constant speed from a source, which we visualize an approximation of in figure \ref{fig:dijkstra}. There are multiple ways to compute the location of the front of the shockwave, such as the ones proposed and compared in \cite{vector_dijkstra} and \cite{heat_method}. For the sake of ease of implementation, we use the simplest one, Dijkstra's single-source-all-paths algorithm. The figure shows level-sets of the distance function to the source (on the left, at coordinates $(-0.5, 0.0)$). This figure suggests that one should observe the wave traveling around the bump faster than across it, which is reasonable, given the detour the wave would take to travel across the bump.
 This simplification ignores the reflections and interference that might occur due to our Dirichelet BCs (which are fixed at a wave-height of zero).
 \\
-In the four stacked figures in figure \ref{fig:bell_wave}, we show the solution of the wave equation on the bell-curve mesh.
+The four stacked planes in figure \ref{fig:bell_wave}, show the solution of the wave equation on the intrinsic bell-curve mesh.
 \label{fig:bell_wave}
-
-\begin{figure}
+\newpage
+\begin{center}
     \centering
-    \hspace*{-6mm}\includegraphics[width=0.9\columnwidth]{../images/bell_wave_distances.png
-    }\vspace*{10mm}
-    \caption{Level sets of the distance function from the left-of-centersource}
+    \hspace*{-6mm}\includegraphics[width=0.9\columnwidth]{../images/bell_wave_distances.png}
+    \captionof{figure}{Level sets of the distance function from a source at coordinates $(-0.5, 0.0)$ on the intrinsic triangulation of the Gaussian bump mesh. The wave equation is solved on this mesh in the following figure.}
     \label{fig:dijkstra}
-    \includegraphics[width=0.9\columnwidth]{../images/bell_wave_0.png}\vspace*{3mm}
-    \includegraphics[width=0.9\columnwidth]{../images/bell_wave_1.png}\vspace*{3mm}
-    \includegraphics[width=0.9\columnwidth]{../images/bell_wave_2.png}\vspace*{3mm}
-    \includegraphics[width=0.9\columnwidth]{../images/bell_wave_3.png}\vspace*{3mm}
-    \caption{.}
+    \vspace*{10mm}
+    \includegraphics[width=\columnwidth]{../images/bell_wave_0.png}\vspace*{3mm}
+    \includegraphics[width=\columnwidth]{../images/bell_wave_1.png}\vspace*{3mm}
+    \includegraphics[width=\columnwidth]{../images/bell_wave_2.png}\vspace*{3mm}
+    \includegraphics[width=\columnwidth]{../images/bell_wave_3.png}\vspace*{3mm}
+    \captionof{figure}{From top to bottom, four consecutive equally spaced instants of the wave equation on the intrinsic triangulation of the Gaussian bump mesh. The initial condition is given in the topmost picture. In the third picture from the top, there are clear similarities with the shapes shown in \ref{fig:dijkstra} when comparing the shape of the wave around the bump. We emphasize that the mesh is completely intrinsic and "flat" - there is no extrusion of the bump on this mesh.}
     \label{fig:bell_wave}
-\end{figure}
+\end{center}
 
-
-
-
-
-\subsection*{Encoding Prior knowledge about an PDE into a LTI SDE}
-This idea was adapted from \cite{exponential_probabilistic} in which the authors use integrated Ornstein-Uhlenbeck processes (chapter \ref{sec:prior}) to solve stiff ODEs. An example of a stiff ODE is 
-$$\frac{du}{dt} = -20u + g(u)$$
-where $g(u)$ is some nonlinear term in the vector field. The linear part of this ODE is the term $-20u$. This part can be solved exactly by the mean of an integrated Ornstein-Uhlenbeck process with rate-parameter $a=20$. Using such a prior leads to faster convergence than the usual integrated Wiener process, because it exactly solves the linear part of the ODE.
-We will show that the same idea can be applied to PDEs and give another related prior process.
-\\
-\example{Mean of the Integrated Process is unaltered}{
-Assume we have a prior process that we believe captures the dynamics of the ODE we want to solve. We will show that the process yielded by repeated integration will have the same mean, given suitable initial conditions. 
-For a LTI SDE of the form \ref{eq:LSDE_definition} over scalar state-space $\vec{u}$, the matrix  will have this structure:
-$$F^\prime = \begin{bmatrix}
-    0 & 1 \\ -a & -b
-\end{bmatrix}$$
-This encodes dynamics of a damped spring-mass system, like we have seen in an example in both chapter \ref{sec:pde} and \ref{sec:prior}. The mean of this process at time $t$ is given by (using eq. \ref{eq:SDE_mean}):
-\begin{align*}
-    \mathbb{E}\left[\begin{pmatrix}
-        \vec{u}_{0}(t) \\ \vec{u}_{1}(t)
-    \end{pmatrix} \!\right] &= 
-    e^{F^\prime t} \mathbb{E}\left[\begin{pmatrix}
-        \vec{u}_{0}(0) \\ \vec{u}_{1}(0)
-    \end{pmatrix} \!\right]
-\end{align*}
-$\vec{u}_0$, the solution function of the ODE encoded in $F^\prime$ is the mean.
-\\
-If we model it integrated once more, we get the following system dynamics matrix 
-$$F^\prime = \begin{bmatrix}
-    0 & 1 & 0 \\ 0 & 0 & 1 \\ 0 & -a & -b
-\end{bmatrix}$$
-This process will have mean given by (denoting the integral of $\vec{u}_0$ as $\vec{u}_{-1}$):
-\begin{align*}
-    \mathbb{E}\left[\begin{pmatrix}
-        \vec{u}_{-1}(t) \\ \vec{u}_{0}(t) \\ \vec{u}_{1}(t)
-    \end{pmatrix} \!\right] &= 
-    e^{F^\prime t} \mathbb{E}\left[\begin{pmatrix}
-        \vec{u}_{-1}(0) \\ \vec{u}_{0}(0) \\ \vec{u}_{1}(0)
-    \end{pmatrix} \!\right]
-\end{align*}
-
-If we integrate it $q-1$ times, we get the following system dynamics matrix $F\in\reals^{q+1\times q+1}$
-
-$$F = \begin{bmatrix}
-    0 & 1 & 0 & \!\!\dots\!\! & 0 & 0 & 0 \\
-    0 & 0 & 1 & \!\!\dots\!\! & 0 & 0 & 0 \\
-    0 & 0 & 0 & \!\!\dots\!\! & 0 & 0 & 0 \\
-    \vdots & \!\!\ddots\!\! & \!\!\ddots\!\! & \!\!\ddots\!\! & \!\!\ddots\!\! & \!\!\ddots\!\! & \vdots \\
-    0 & 0 & 0 & \!\!\dots\!\! & 0 & 1 & 0 \\
-    0 & 0 & 0 & \!\!\dots\!\! & 0 & 0 & 1 \\
-    0 & 0 & 0 & \!\!\dots\!\! & 0 & \!\!-b & \!\!\!\!-a \\
-\end{bmatrix}$$
-
-$F$ encodes the ODE:
+\section{Experiments with Physically Informed Priors}
+As problems to study, we choose a nonlinear version of the heat (\ref{eq:nonlinear_heat}) and wave (\ref{eq:nonlinear_wave}) equation, with varying degrees of nonlinearity. 
 \begin{align}
-    \frac{d}{dt}\vec{u}_0 &= \vec{u}_1 \nonumber
-    \\\frac{d}{dt}\vec{u}_i &= \vec{u}_{i+1} \hspace{5mm} \i \in \{1, \dots, q\!-\!1\}\label{eq:relationship}
-    \\\frac{d}{dt}\vec{u}_q &= -b\vec{u}_{q-2} - a\vec{u}_{q-1}\label{eq:to_integrate}
+    \frac{\partial}{\partial t}u = -\Delta u - \alpha u^2\label{eq:nonlinear_heat}
 \end{align}
-By taking the expectation of equation eq. \ref{eq:to_integrate} we can show that the mean of the $q$-times integrated process is the same as the mean of the original process.
+\begin{align}
+    \frac{\partial^2}{\partial t^2}u = -\Delta u - \alpha\tan u\label{eq:nonlinear_wave}
+\end{align}
+The hypothesis is that, for small nonlinearities, a prior that encodes the linear heat/wave dynamics will outperform the integrated Wiener process. 
+
+\subsection*{Encoding the Linear part of a PDE into a Prior}
+This idea is adapted from \cite{exponential_probabilistic} in which the authors show that using integrated Ornstein-Uhlenbeck processes (chapter \ref{sec:prior}) give an inductive bias when solving ODEs with partially linear dynamics (semilinear ODEs / PDEs). Using such a prior leads to faster convergence than the usual integrated Wiener process, because it exactly solves the linear part of the ODE.
+We show that the same idea can be applied to PDEs and give appropriate prior process, but will start by explaining the principle.
+\\
+\example{Mean of Prior solves Linear ODE exactly}{
+We can take any linear ODE and make a series of transformations to the ODE that preserve the modeled system, but will explicitly model more derivatives in the state space.
+\\
+We will show the procedure with the damped harmonic oscillator
+\begin{align}
+    \frac{d}{dt}\vec{u}_0 &= \vec{u}_1 \label{eq:physics_prior_0}
+    \\\frac{d}{dt}\vec{u}_1 &= -a\vec{u}_{0} - b\vec{u}_{1}\label{eq:physics_prior_1}
+\end{align}
+for some fixed choice of $a$, $b$.
+\\
+Assume we are given initial condition $\vec{u}_0(0)=s_0(0)$, $\vec{u}_1(0) = s_1$. We can feed the initial known values into eq. \ref{eq:physics_prior_1} to get $s_2 = \vec{u}_2(0) = -a\vec{u}_{0}(0) - b\vec{u}_{1}(0)$.
+We now impose regularity on $\vec{u}_2$ by taking the derivative w.r.t. time on all terms in the equations \ref{eq:physics_prior_0} and \ref{eq:physics_prior_1}:
 \begin{align*}
-    \mathbb{E}\left[\begin{pmatrix}
-        \vec{u}_{q\!-\!1}(t) \\ \vec{u}_{q}(t)
-    \end{pmatrix} \!\right] &= 
-    e^{F^\prime t} \mathbb{E}\left[\begin{pmatrix}
-        \vec{u}_{q}(0) \\ \vec{u}_{q\!-\!1}(0)
-    \end{pmatrix} \!\right]
+    \frac{d^2}{dt^2}\vec{u}_0 &=  \frac{d}{dt}\vec{u}_1 \nonumber
     \\
-    &\hspace*{2mm}\rotatebox[origin=c]{90}{$\Leftrightarrow$}
+    \frac{d^2}{dt^2}\vec{u}_1 &=  \frac{d}{dt} \left(-a\vec{u}_{0} - b\vec{u}_{1}\right)
     \\
-    \int \mathbb{E}\left[\begin{pmatrix}
-        \vec{u}_{q\!-\!1}(t) \\ \vec{u}_{q}(t)
-    \end{pmatrix} \!\right] &= \int 
-    e^{F^\prime t} \mathbb{E}\left[\begin{pmatrix}
-        \vec{u}_{q}(0) \\ \vec{u}_{q\!-\!1}(0)
-    \end{pmatrix} \!\right]
+    &=  -k\frac{d}{dt}\vec{u}_{0} - l\frac{d}{dt}\vec{u}_{1}
+\end{align*}
+By the derivative/integral relationship in the state-space representation, this simplifies to
+\begin{align}
+    \frac{d}{dt}\vec{u}_0 = \vec{u}_1
     \\
-    &\hspace*{2mm}\rotatebox[origin=c]{90}{$\Leftrightarrow$}
+    \frac{d}{dt}\vec{u}_1 &= \vec{u}_2 \nonumber
     \\
-    \int\!\!\!\!\int \mathbb{E}\left[\begin{pmatrix}
-        \vec{u}_{q\!-\!1}(t) \\ \vec{u}_{q}(t)
-    \end{pmatrix} \!\right] &= \int\!\!\!\!\int 
-    e^{F^\prime t} \mathbb{E}\left[\begin{pmatrix}
-        \vec{u}_{q}(0) \\ \vec{u}_{q\!-\!1}(0)
-    \end{pmatrix} \!\right]
-    \\
-    &\hspace*{2mm}\rotatebox[origin=c]{90}{$\Leftrightarrow$}
-    \\
-    \underbrace{\int\!\!\!\dots\!\!\!\int}_{\times\! (q-\!1)} \mathbb{E}\left[\begin{pmatrix}
-        \vec{u}_{q\!-\!1}(t) \\ \vec{u}_{q}(t)
-    \end{pmatrix} \!\right] &= \underbrace{\int\!\!\!\dots\!\!\!\int}_{\times\! (q-\!1)} 
-    e^{F^\prime t} \mathbb{E}\left[\begin{pmatrix}
-        \vec{u}_{q}(0) \\ \vec{u}_{q\!-\!1}(0)
-    \end{pmatrix} \!\right]
-    \\
-    &\hspace*{2mm}\rotatebox[origin=c]{90}{$\Leftrightarrow$} \text{  (linearity of integral)}
-    \\
-    \mathbb{E}\left[\begin{pmatrix}
-        \vec{u}_{0}(t) \\ \vec{u}_{1}(t)
-    \end{pmatrix} \!\right] &= 
-    e^{F^\prime t} \mathbb{E}\left[\begin{pmatrix}
-        \vec{u}_{0}(0) \\ \vec{u}_{1}(0)
-    \end{pmatrix} \!\right]
+    \frac{d}{dt}\vec{u}_2 &= -a\vec{u}_{1} - b\vec{u}_{2}
+\end{align}
+We have increased the state-space to encompass another derivative. Since we previously determined $\vec{u}_2(0) = s_2$, we have all the required information to solve this ODE.
+\\ The steps in this transformation can be repeated indefinitely; one needs to compute the induced initial value of the derivative from the set of equations and then augment the state-space.
+We start off with system matrix $F^\prime$, and after $q-1$ repetitions we end up with a system matrix $F\in\reals^{q+1\times q+1}$ 
+$$F^\prime\!\! =\! \begin{bmatrix}
+0 & 1 \\  \!-a & \!-b
+\end{bmatrix} \to F =\! \begin{bmatrix}
+0 & 1 & 0 & \!\!\dots\!\! & 0 & 0 & 0 \\
+0 & 0 & 1 & \!\!\dots\!\! & 0 & 0 & 0 \\
+0 & 0 & 0 & \!\!\dots\!\! & 0 & 0 & 0 \\
+\vdots & \!\!\ddots\!\! & \!\!\ddots\!\! & \!\!\ddots\!\! & \!\!\ddots\!\! & \!\!\ddots\!\! & \vdots \\
+0 & 0 & 0 & \!\!\dots\!\! & 0 & 1 & 0 \\
+0 & 0 & 0 & \!\!\dots\!\! & 0 & 0 & 1 \\
+0 & 0 & 0 & \!\!\dots\!\! & 0 & \!\!-a & \!\!\!\!-b \\
+\end{bmatrix}$$
+The original system matrix $F'$ is nested inside $F$. \\
+We conclude by transforming this into a LTI SDE by adding zero mean Brownian motion increments into the highest derivative. When integrated, it will still have zero mean and therefore will not affect the mean of the process. This is similar in spirit to the spring example in chapter \ref{sec:prior}, and yields the following LTI SDE which can directly be applied as a prior.
+\begin{align*}
+    \frac{d}{dt}\vec{U}_i &= \vec{U}_{i+1} \hspace{10mm} i \in \{0, \dots, q\!-\!1\}
+    \\d\;\vec{U}_q &= -b\vec{U}_{q-2}dt - a\vec{U}_{q-1}dt + \sigma dW(t)
 \end{align*}
 }
+\noindent
+The previous example was for scalar-valued ODEs, but the same principle can be applied to the state-space representation of vector-valued ODEs like the ones given at the end of chapter \ref{sec:prior}, which can be obtained after applying the Method of Lines to a PDE. The same principle is then simply applied component-wise. For a dimension $n$ vector-valued linear ODE $$\frac{d^2}{dt^2}u = Au + B\frac{d}{dt}u$$ with state-space system matrix $F^\prime$, the corresponding q-times integrated prior will be constructed as
+$$F^\prime\!\! =\! \begin{bmatrix}
+    \mathbf{0} & \textbf{I}_n \\ \!A & \!B
+    \end{bmatrix} \to F = \begin{bmatrix}
+\mathbf{0} & \textbf{I}_n & \mathbf{0} & \!\!\!\dots\!\! & \mathbf{0} & \mathbf{0} & \!\!\mathbf{0} \\
+\mathbf{0} & \mathbf{0} & \textbf{I}_n & \!\!\!\dots\!\! & \mathbf{0} & \mathbf{0} & \!\!\mathbf{0} \\
+\mathbf{0} & \mathbf{0} & \mathbf{0} & \!\!\!\dots\!\! & \mathbf{0} & \mathbf{0} & \!\!\mathbf{0} \\
+\vdots & \!\!\ddots\!\! & \!\!\ddots\!\! & \!\!\ddots\!\! & \!\!\ddots\!\! & \!\!\ddots\!\! & \!\!\vdots \\
+\mathbf{0} & \mathbf{0} & \mathbf{0} & \!\!\!\dots\!\! & \mathbf{0} & \textbf{I}_n & \!\!\mathbf{0} \\
+\mathbf{0} & \mathbf{0} & \mathbf{0} & \!\!\!\dots\!\! & \mathbf{0} & \mathbf{0} & \textbf{I}_n \\
+\mathbf{0} & \mathbf{0} & \mathbf{0} & \!\!\!\dots\!\! & \mathbf{0} & \!\!A & \!\!\!\!B \\
+\end{bmatrix}$$
+We then build the LTI SDE with the diffusion matrix $LL^\top = E_qE_q^\top$, which ensures that the noise is only fed into the highest derivative. \\
+This process of repeated integration yields a LTI SDE with $q$ continuous derivatives whose mean coincides with the solution of the original ODE. We now show this for the scalar wave equation and then give the PDE-wave equation counterpart if it is not yet clear how to do this.
 
-\definition{Wave Process}{
+\definition{Wave Process Prior}{
     \includegraphics[width=\columnwidth]{../images/wave_process.png}
     \captionof{figure}{Iterated integrations of the Wave Process.}
     \label{fig:wave_process}
-    This process really is an instance of the Ornstein Uhlenbeck Process mention in chapter \ref{sec:prior}, but for our purposes it will be more descriptive to refer to it as a "Wave process". 
+    The mean of the scalar wave process solves the scalar wave equation $\frac{d^2}{dt^2}u = -au$ exactly. The simplest scalar wave process has system matrix $F$
+    $$F = \begin{bmatrix} 0 & 1 \\ -a & \!0 \end{bmatrix} \hspace*{10mm} L = \begin{bmatrix} 0 \\ 1 \end{bmatrix}$$ 
+    (shown at the top), while the once-integrated (middle) wave process has system matrix $F$
+    $$F = \begin{bmatrix} 0 & 1 & 0 \\ 0 & 0 & 1 \\ 0 & -a & \!0 \end{bmatrix} \hspace*{10mm} L = \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}$$
+    We initialize the process with the initial conditions calculated from the ODE ($s_0, s_1, \dots$), and the mean will then satisfy the ODE exactly (see figure, exact solution for $a=1$ is $\cos(t)$).
     \\
-    It however already has the wave-like behaviour at $q=1$, which is shown in the first slide in figure \ref{fig:wave_process}. The second slide shows the behaviour at $q=2$ and the third slide shows the behaviour at $q=3$. 
     \\
-    Since we need at least $q=2$ derivatives for a prior process to be applicable for second order ODEs, we will never work with the Wave process itself, but only with its iterated integrations.
-   
-    The Wave process is defined by the following state-space representation:
-    $$F=\begin{bmatrix}
-        0 & 1 \\ -a & 0
-    \end{bmatrix} \hspace{1cm} L=\begin{bmatrix}
-        0 \\ 
-        1 
-    \end{bmatrix}$$
-    \\ The Twice Integrated Wiener Process has 3-dimensional state-space with $$F=\begin{bmatrix}
-        0 & 1 & 0 \\ 0 & 0 & 1 \\ 0 & -a & 0
-    \end{bmatrix} \hspace{1cm} L=\begin{bmatrix}
-        0 \\ 0 \\ 1
-    \end{bmatrix}$$
-    \\ The posterior means of the $q$-times integrated Wiener process are 2q + 1-ic splines (\cite{probnum}) - see the figure above. There is in principle nothing preventing us from using higher order integrated Wiener processes, but numerical issues can be encountered already at $q=3$. We will tackle this later.
+    The corresponding process for the wave equation $\frac{d^2}{dt^2}u = -\Delta u$ can be built by discretizing the Laplacian matrix $L$ and using the wave process as the prior, 
+    $$F = \begin{bmatrix}
+    \mathbf{0} &  \textbf{I}_n  \\ \!-L & \! \mathbf{0}
+    \end{bmatrix} \hspace*{5mm} LL^\top = E_1E_1^\top = \begin{bmatrix}
+    \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \textbf{I}_n \end{bmatrix}$$
+    We will denote this SDE as the Wave Process.
 }
-\newpage
-In this section we will apply the solver and our built Laplace-matrices to some ODEs. We will investigate how different choices of prior processes can give an inductive bias to the solver, helping it solve the ODE more exactly.
-We will use a similar idea, but instead of using integrated Ornstein-Uhlenbeck processes, we will use the Laplacian matrices we have built in earlier sections to build PDE priors taylored to different kind of problems.
-\subsection*{Physically Informed Priors}
-As problems, we choose a nonlinear version of the heat and wave equation, with varying degrees of nonlinearity. 
-\begin{align}
-    \frac{\partial}{\partial t}u = -\Delta u - au^2\label{eq:nonlinear_heat}
-\end{align}
-\begin{align}
-    \frac{\partial^2}{\partial t^2}u = -\Delta u - a\tan u\label{eq:nonlinear_wave}
-\end{align}
-The hypothesis is that, for small nonlinearities, a prior that encodes the linear heat/wave dynamics will outperform the integrated Wiener process. As the nonlinearities become larger and we move away from the linear dynamics, the prior will not as related and we should expect a decrease in efficiency.  We run both problems for $a\in\{0, 10^{-3}, 1\}$.
+\example{Wave Process in Action}{
+\begin{center}
+    \includegraphics[width=\columnwidth]{../images/conditioned_waves.png}
+    \captionof{figure}{Draws from the Integrated Wave Process, Conditioned on the same four points that were also used in chapter \ref{sec:prior}.}
+\end{center}
+}
+\noindent
+One is tempted to define a Heat process analogously by placing the Laplacian in the bottom right corner of the dynamics matrix $F$ (which is the correct way of doing it), but it turns out that this reduces to an instance of the Ornstein-Uhlenbeck process with a specific setting of the rate-parameter. We will still refer to it as the Heat process / prior, which captures the spatial diffusion encoded in $L$.
+
+\subsection*{Experiments}
+We empirically investigate the efficiency of the probabilistic solver when using the integrated Wiener process, the integrated wave process, and the integrated heat process as priors for the nonlinear heat and wave equations (eq. \ref{eq:nonlinear_heat} \& \ref{eq:nonlinear_wave}).
+As the nonlinearities become larger and we move away from the linear dynamics, the prior will not as related and we should expect a decrease in efficiency.  We run both problems for $\alpha\in\{0, 10^{-3}, 1\}$.
 \\ For eq. \ref{eq:nonlinear_wave}, we will use integrated Wave processes as our prior, and for eq. \ref{eq:nonlinear_wave} we will use the Heat process. We will compare against repeatedly integrated Wiener processes as priors.
 \\\\
 The problems will be solved on the 2D surface of the sphere, approximated by a 12-vertex icosphere. The vector fields are integrated from $t_0=0$ to $t_{\mathbb{T}}=10$.  We will grade the PN solutions by the root-mean-square-error at all computed timesteps against a high-accuracy reference solution implemented in \texttt{diffrax} \cite{diffrax}, using the Kvaerno5/4 method \cite{kvaerno}, suitable for stiff problems like the heat and wave equation. The reference solution has both relative and absolute tolerances of $10^{-8}$, which then also serves as a lower bound for the error of the PN solution.
 \\ The PN solution will be computed for varying amount of timesteps and for different choices of $q$ in the prior process. We will then plot the work/precision diagrams for the different choices of $q$ and $a$.
 \subsection*{Results}
-See figures \ref{fig:heat} through \ref{fig:wave big} for all work/precision diagrams. In the figures, the integrated wiener process is depicted in green, the integrated wave process in blue, and the integrated heat process in red. The x-axis shows the number of timesteps, and the y-axis shows the root-mean-square-error. As the number of steps increase, the error generally decreases. For increasing $q$, the error drops faster.
+See figures \ref{fig:heat} through \ref{fig:wave big} for all work/precision diagrams. In the figures, the integrated wiener process is depicted in green, the integrated wave process in blue, and the integrated heat process in red. The x-axis shows the number of timesteps in the discretized prior ($|\mathbb{T}|$), and the y-axis shows the root-mean-square-error. As the number of steps increase, the error generally decreases. For increasing $q$, the error drops faster.
 \\ The integrated Wiener processes are generally being outperformed, however less decisively so for significant nonlinearities ($a = 1$). For $a=0$ the expected exact solution of the priors is observed, even for $10$ timesteps, massively outperforming the integrated Wiener process (but this was not a fair competition).
-\\ The result confirm that an appropriate prior process gives the solver an inductive bias that helps solve the ODEs more exactly and efficiently.s
+\\ The result confirm that an appropriate prior process gives the solver an inductive bias that helps solve the ODEs more exactly and efficiently.
 \begin{figure}
     \includegraphics[width=\columnwidth]{../images/solver_heat.png}
     \caption{}

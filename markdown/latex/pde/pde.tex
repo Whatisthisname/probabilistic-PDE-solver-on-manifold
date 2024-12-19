@@ -71,9 +71,11 @@ For Linear ODEs, closed form solutions to the initial value problem exist. They 
 The linear scalar ODE with scalar coefficient $a$ $$\frac{d}{dt}u(t) = au(t) \hspace{20px}$$ has solution $$u(t) = \text{e}^{at}u(0)$$
 This pattern generalizes to $n$-dimensional ODEs with matrix coefficient $A\in\reals^{n\times n}$
 $$\frac{d}{dt}\vec{u}(t) = A\vec{u}(t)$$ 
-which has the solution $$\text{e}^{At}\vec{u}(0)$$
-
-$\text{e}^{At}$ is the matrix exponential, and is defined only for square matrices. $\text{e}^{At} = \sum_{n=0}^{\infty} \frac{t^n}{n!}A^n$. TODO VERIFY
+which has the solution 
+\begin{align}
+    \vec{u}(t) = \text{e}^{At}\vec{u}(0)\label{eq:matrix_exp}
+\end{align}
+$\text{e}^{At}$ is the matrix exponential, and is defined only for square matrices. $\text{e}^{At} = \sum_{n=0}^{\infty} \frac{t^n}{n!}A^n$.
 }
 Rarely can IVP problems be solved analytically, hence the need for numerical methods.
 \definition{Numerical solution of ODE}{

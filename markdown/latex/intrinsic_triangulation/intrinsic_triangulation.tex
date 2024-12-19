@@ -40,7 +40,6 @@ $$||AB||_g > ||AC||_g + ||CB||_g$$
 (which is \textit{the} violation of the triangle inequality), $A \to C \to B$ will be a shorter path. This is the essence of non-planarity, which motivates the need for the triangle inequality.
 \\
 To deal with non-planar triangles, one can subdivide them. There are many subdivision schemes of triangles, such as red-green refinement \cite{puppo2008rgbdivision}, butterfly subdivision \cite{dyn1990butterflydivision}, or the loop scheme \cite{loop1987smoothloopdivision}. We will use longest-edge bisection\cite{longest_edge_bisection}, which is simple to implement. When we repeatedly halve the longest edge of a non-planar triangle, the resulting triangles will eventually become planar.
-\newpage
 \example{Fan Model}{
     To better understand the phenomenon of non-planarity, we suggest a mental model of the geometry encoded by the triangle in fig \ref{fig:non-planar-triangle} as part of a folded fan. The two shortest edges ($1, 1.5$) form the straight edges, while the longest one is scrunched up between them.
     \begin{center}    
@@ -161,7 +160,7 @@ For the subsequent refinement phase, it will be useful to have a figure to refer
 During subdivision, we are constructing an intrinsic partition of the manifold into triangles. A triangle might require multiply bisections before it becomes planar. Note that, before any splitting, we didn't have just a bad approximation - we had \textit{no} approximation. Splitting was necessary to work with the geometry.  
 \newpage
 \subsection*{Results}
-\subsubsection*{Triangulating stretched Gaussian Bump}
+\subsubsection*{Triangulating Gaussian Bump}
 We define our own metric similarly to the hemisphere metric example in section \ref{sec:manifolds}.
 The map $f$ from coordinate space $C = (-1, 1) \times (-1, 1)$ is given as 
 $$f(\begin{pmatrix}
@@ -172,36 +171,38 @@ $$\exp\left(-\left(\begin{pmatrix}
 \end{pmatrix} \begin{bmatrix} 0.1 & 0.1 \\ 0.1 & 0.35 \end{bmatrix} \begin{pmatrix}
     x \\ y
 \end{pmatrix}\right)^2\right)$$
-Figure \ref{fig:bell_before} shows the initial coarse mesh. The algorithm is run for $500$ steps with $A_{\text{max}} = 1/8$ and $\rho = 1.2$. The output is shown in fig \ref{fig:bell_refined}. The mesh is now more dense around the peak of the bump, where the curvature is higher. The mesh is not an embedding of the manifold, but an intrinsic triangulation. The embedding is shown in fig \ref{fig:bell_embedded}, resulting in an extrinsic representation. We might not generally have access to $f$, and this figure is for illustration purposes only. Notice that triangles that appear very thin and stretched in fig \ref{fig:bell_refined} are not so after being embedded isometrically.
-    \begin{figure}
-        \centering
-        \includegraphics[width=0.94\columnwidth]{../images/bell_before_refinement.png}
-        \captionof{figure}{Input mesh.}
-        \label{fig:bell_before}
-        \includegraphics[width=0.94\columnwidth]{../images/bell_after_refinement.png}
-        \captionof{figure}{Output mesh.}
-        \label{fig:bell_refined}
-        \includegraphics[width=0.94\columnwidth]{../images/bell_embedded.png}
-        \captionof{figure}{Mapping the refined mesh through the embedding function $f$.}
-        \label{fig:bell_embedded}
-    \end{figure}
+Figure \ref{fig:bell_input} shows the initial coarse mesh. The algorithm is run for $500$ steps with $A_{\text{max}} = 1/8$ and $\rho = 1.2$. The output is shown in figures \ref{fig:bell_tissot}. The mesh is now more dense around the peak of the bump, where the curvature is higher. The mesh is not an embedding of the manifold, but an intrinsic triangulation. An embedding using $f$ is shown in fig \ref{fig:bell_embedded}, giving an extrinsic representation. We might not generally have access to $f$, and this figure is for illustration purposes only. Notice that triangles that appear very thin and stretched in the intrinsic triangulation are not so after being embedded isometrically.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\columnwidth]{../images/bell_before_refinement.png}
+    \captionof{figure}{Input mesh.}
+    \label{fig:bell_input}
+    \includegraphics[width=0.75\columnwidth]{../images/bell_after_refinement.png}
+    \includegraphics[width=0.75\columnwidth]{../images/bell_tissot.png}
+    \captionof{figure}{Output mesh and Tissot's indicatrices.}
+    \label{fig:bell_tissot}
+    \includegraphics[width=0.94\columnwidth]{../images/bell_embedded.png}
+    \captionof{figure}{Mapping the refined mesh through the embedding function $f$.}
+    \label{fig:bell_embedded}
+\end{figure}
 
 \subsubsection*{Triangulating subset of the Hyperbolic Plane}
     We showcase the algorithm on the Poincaré disc model of $\mathbb{H}^2$ and compare with a hyperbolic tiling. As discussed in an earlier section, we cannot triangulate an unbounded domain, so we truncate the unit disc and look only within the disc of radius $0.97$. Algorithm run for $500$ steps with $A_{\text{max}} = \infty$ and $\rho = 1.9$. Setting $A_{\text{max}} = \infty$ leads to the parameter being ignored, while a high setting of $\rho$ makes the refinement phase focus just on making planar triangles, which means that all initial iterations are likely to focus on non-planar triangles only. 
     \\
-    Figure \ref{fig:hyper_before} shows the input mesh $\mathbf{\Delta}_0$, which covers the $0.97$-disc somewhat uniformly. Three triangles on the way to the border have their edge-lengths marked. This is the length under the hyperbolic metric. The outermost triangle does not satisfy the triangle inequality in this initial mesh, as $1.34 + 2.04 < 6.08$. Figure \ref{fig:hyper_after} shows the output of the algorithm, an intrinsic triangulation of a subset of $\mathbb{H}^2$. The high triangle density at the edges highlights the hyperbolic expansion of space, which necessitates triangle subdivision. All triangles are congruent. The triangles in our tiling are not congruent and will depend on the initial triangulation, but $A_{\text{max}}$ ensures that we make splits around the edge proportional to the area. A common visualization of the hyperbolic plane is given in fig \ref{fig:hyper_tiling}. All triangles are congruent, which, like in figure \ref{fig:hyper_after} illustrates the hyperbolic expansion of space.
+    Figure \ref{fig:hyper_before} shows the input mesh $\mathbf{\Delta}_0$, which covers the $0.97$-disc somewhat uniformly. Three triangles on the way to the border have their edge-lengths marked. This is the length under the hyperbolic metric. The outermost triangle does not satisfy the triangle inequality in this initial mesh, as $1.34 + 2.04 < 6.08$. Figure \ref{fig:hyper_after} shows the output of the algorithm, an intrinsic triangulation of a subset of $\mathbb{H}^2$. The high triangle density at the edges highlights the hyperbolic expansion of space, which necessitates triangle subdivision. All triangles are congruent. The triangles in our tiling are not congruent and will depend on the initial triangulation, but $A_{\text{max}}$ ensures that we make splits around the edge proportional to the area. A common visualization of the hyperbolic plane is given in fig \ref{fig:hyper_tiling}, in which all triangles are congruent. This visualization bears resemblance to the one obtained in figure \ref{fig:hyper_after} and illustrates the hyperbolic expansion of space which necessitates triangle subdivision.
     \\
     \begin{figure}
         \centering
-        \includegraphics[width=0.9\columnwidth]{../images/hyperbolic_disc_before_refinement_some_labels.png}
+        \includegraphics[width=0.85\columnwidth]{../images/hyperbolic_disc_before_refinement_some_labels.png}
         \captionof{figure}{Input mesh.}
         \label{fig:hyper_before}
-        \includegraphics[width=1.0\columnwidth]{../images/hyperbolic_disc_after_refinement.png}
+        \includegraphics[width=0.85\columnwidth]{../images/hyperbolic_disc_after_refinement.png}
         \captionof{figure}{Output mesh}
         \label{fig:hyper_after}
         \includegraphics[width=0.85\columnwidth]{../images/wiki_hyperbolic.png}
-        \captionof{figure}{Tiling of the hyperbolic plane. Image from \cite{HyperbolicTiling}.}
+        \captionof{figure}{Tiling of the hyperbolic plane from \cite{HyperbolicTiling}.}
         \label{fig:hyper_tiling}
+        
     \end{figure}
 
 \subsection*{Improvements}
