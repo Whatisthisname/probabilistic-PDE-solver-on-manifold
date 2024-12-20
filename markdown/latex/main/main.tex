@@ -1,7 +1,7 @@
 \input{../header.tex}
 \def\COMPILINGFROMMAIN{}
 \begin{document}
-\title{\Huge{Probabilistic Numerical Solvers for Partial Differential Equations on Riemannian 2-Manifolds}}
+\title{\Huge{Probabilistic Numerical Solutions of Partial Differential Equations on Riemannian 2-Manifolds}}
 \author{
 \\
 Master's Thesis in Computer Science
@@ -143,11 +143,12 @@ When one could have chosen to work with 4-dimensional manifolds, choosing 2-dime
 \input{../prior/prior.tex}
 
 \clearpage
-\section{Applying the Solver}\label{sec:solver_experiments}
+\section{Applying the Solver and Laplacian Matrix}\label{sec:solver_experiments}
 \input{../solver_experiments/solver_experiments.tex}
 
 \section{Conclusion}
-  
+We have explored only few aspects of probabilistic numerical solvers on manifolds. The thesis explored only the Laplacian, but we also gave formulas for the divergence and curl, differential operators that appear, for example, in the Navier Stokes equation. Since these are linear operators too, the methods presented here should still be applicable. Probabilistic numerical fluid flow solvers on manifolds could be an interesting future research direction, especially relevant in the context of climate models. The steep cubic cost in the state-space dimension is however a drawback. This can be sidestepped by assumining spatial independence or Kronecker structure in the prior model, as in \cite{kronecker}. The methods of discrete exterior calculus also has many promising avenues for future research. The thesis only touched upon the basics, but the field is rich with applications in computer graphics and physics simulations.
+\clearpage
 \printbibliography
 
 \end{document}
