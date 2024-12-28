@@ -272,11 +272,14 @@ def jax_batch_extended_filter(
         ),
     )
 
-    gamma = jnp.sqrt(carry.output_noise_scale_acc / (jnp.sum(update_indicator) - 1))
+    gamma = carry.output_noise_scale_acc
 
-    if gamma == 0 or jnp.isnan(gamma):
+    if gamma == 0 or jnp.sum(update_indicator) == 0:
         print("SETTING GAMMA TO ONE!!!")
         gamma = 1  # avoid division by zero
+    else:
+        gamma /= jnp.sum(update_indicator)
+        gamma = jnp.sqrt(gamma)
 
     filtered_states: CholGauss
 
