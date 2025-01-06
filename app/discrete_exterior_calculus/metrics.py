@@ -43,7 +43,7 @@ def semi_hyperbolic_metric(point: jnp.ndarray):
 
 def spacecollapse(point: jnp.ndarray):
     # scale = jnp.array([[0.1, 0], [0, 0.4]])
-    scale = jnp.array([[0.05, 0], [0, 1.3]]) * 0.5
+    scale = jnp.array([[1.1, 0], [0, 1.1]]) * 0.5
     return (
         100
         * jnp.eye(2)
@@ -54,7 +54,7 @@ def spacecollapse(point: jnp.ndarray):
                     -((jnp.linalg.norm(point @ jnp.linalg.inv(scale) @ point)) ** 2)
                 )
             ),
-            0.5,
+            0.05,
             1,
         )
     )
@@ -77,6 +77,21 @@ def spaceexpand(point: jnp.ndarray):
         + 10
         * (jnp.exp(-((jnp.linalg.norm(point @ jnp.linalg.inv(scale) @ point)) ** 2)))
     )
+
+
+def detour(point: jnp.ndarray):
+    # scale = jnp.array([[0.1, 0], [0, 0.4]])
+    scale = jnp.array([[1.1, 0], [0, 0.03]]) * 0.5
+    yvalue = jnp.clip(
+        (
+            1
+            + 3
+            * jnp.exp(-((jnp.linalg.norm(point @ jnp.linalg.inv(scale) @ point)) ** 2))
+        ),
+        0.05,
+        4,
+    )
+    return jnp.array([[yvalue, 0], [0, 1]])
 
 
 def vertical_stretch(point: jnp.ndarray):

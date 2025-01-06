@@ -166,7 +166,7 @@ $$\exp\left(-\left(\begin{pmatrix}
     x & y
 \end{pmatrix} \begin{bmatrix} 0.1 & 0.1 \\ 0.1 & 0.35 \end{bmatrix}^{-\!1} \begin{pmatrix}
     x \\ y
-\end{pmatrix}\right)^2\right)$$
+\end{pmatrix}\right)\right)$$
 Figure \ref{fig:bell_input} shows the initial coarse mesh. The algorithm is run for $500$ steps with $A_{\text{max}} = 1/8$ and $\rho = 1.2$. The output is shown in figures \ref{fig:bell_tissot}. The mesh is now more dense around the peak of the bump, where the curvature is higher. The mesh is not an embedding of the manifold, but an intrinsic triangulation. An embedding using $f$ is shown in fig \ref{fig:bell_embedded}, giving an extrinsic representation. We might not generally have access to $f$, and this figure is for illustration purposes only. Notice that triangles that appear very thin and stretched in the intrinsic triangulation are not so after being embedded isometrically.
 \begin{figure}
     \centering
